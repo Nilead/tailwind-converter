@@ -7,6 +7,9 @@
             </h1>
 
             <div class="ml-auto">
+                <button type="button" class="bg-gray-700 hover:bg-gray-800 text-white font-medium py-2 px-4 rounded mx-4"
+                        @click="toggleView()">View {{ viewFormat() }}</button>
+
                 <button type="button" class="bg-gray-700 hover:bg-gray-800 text-white font-medium py-2 px-4 rounded"
                         @click="toggle = 'settings'">Settings</button>
 
@@ -20,21 +23,6 @@
                     <div class="flex flex-col pt-1 shadow-2xl">
                         <div class="flex bg-black p-1">
                             {{ formatView }} html
-
-                            <div class="relative ml-auto">
-                                <button class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded inline-flex items-center"
-                                        @click="toggle = 'formatHtml1'"
-                                >
-                                    <svg class="fill-current w-3 h-3" viewBox="-122.9 121.1 105.9 61.9">
-                                        <path d="M-63.2 180.3l43.5-43.5c1.7-1.7 2.7-4 2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8 1-6.5 2.7L-69.9 161l-37.2-37.2c-1.7-1.7-4-2.7-6.5-2.7s-4.8 1-6.5 2.6c-1.9 1.8-2.8 4.2-2.8 6.6 0 2.3.9 4.6 2.6 6.5 11.4 11.5 41 41.2 43 43.3l.2.2c3.6 3.6 10.3 3.6 13.9 0z"></path>
-                                    </svg>
-                                </button>
-
-                                <div class="absolute z-10 right-0 mt-2 py-2 w-48 bg-white rounded-lg shadow-xl text-sm" v-show="toggle == 'formatHtml1'">
-                                    <a class="block px-4 py-2 text-gray-800 hover:bg-gray-300 cursor-pointer" v-show="'original' == formatView" @click="formatView = 'tailwind'">Format tailwind</a>
-                                    <a class="block px-4 py-2 text-gray-800 hover:bg-gray-300 cursor-pointer" v-show="'tailwind' == formatView" @click="formatView = 'original'">Format original</a>
-                                </div>
-                            </div>
                         </div>
                         <AceEditor v-show="'original' == formatView"
                                 v-model="originalHtml"
@@ -55,21 +43,6 @@
                     <div class="flex flex-col pt-1 shadow-2xl">
                         <div class="flex bg-black p-1">
                             {{ formatView }} css
-
-                            <div class="relative ml-auto">
-                                <button class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded inline-flex items-center"
-                                        @click="toggle = 'formatHtml2'"
-                                >
-                                    <svg class="fill-current w-3 h-3" viewBox="-122.9 121.1 105.9 61.9">
-                                        <path d="M-63.2 180.3l43.5-43.5c1.7-1.7 2.7-4 2.7-6.5s-1-4.8-2.7-6.5c-1.7-1.7-4-2.7-6.5-2.7s-4.8 1-6.5 2.7L-69.9 161l-37.2-37.2c-1.7-1.7-4-2.7-6.5-2.7s-4.8 1-6.5 2.6c-1.9 1.8-2.8 4.2-2.8 6.6 0 2.3.9 4.6 2.6 6.5 11.4 11.5 41 41.2 43 43.3l.2.2c3.6 3.6 10.3 3.6 13.9 0z"></path>
-                                    </svg>
-                                </button>
-
-                                <div class="absolute z-10 right-0 mt-2 py-2 w-48 bg-white rounded-lg shadow-xl text-sm" v-show="toggle == 'formatHtml2'">
-                                    <a class="block px-4 py-2 text-gray-800 hover:bg-gray-300 cursor-pointer" v-show="'original' == formatView" @click="formatView = 'tailwind'">Format tailwind</a>
-                                    <a class="block px-4 py-2 text-gray-800 hover:bg-gray-300 cursor-pointer" v-show="'tailwind' == formatView" @click="formatView = 'original'">Format original</a>
-                                </div>
-                            </div>
                         </div>
                         <AceEditor v-show="'original' == formatView"
                                 v-model="originalCss"
@@ -162,6 +135,16 @@
             this.$refs.tailwindHtml.editor.setReadOnly(true);
         },
         methods: {
+            viewFormat() {
+                if (this.formatView == 'original') {
+                    return  'tailwind';
+                } else {
+                    return 'original';
+                }
+            },
+            toggleView() {
+                this.formatView = this.viewFormat();
+            },
             convert() {
                 let sizes = {
                     '640px': 'sm',
