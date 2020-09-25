@@ -101,7 +101,6 @@
 </template>
 
 <script>
-    import AceEditor from 'vue2-ace-editor';
     import {General} from '../parsers/General';
 
     let parsers = {General};
@@ -109,7 +108,7 @@
     export default {
         name: 'TailwindConverter',
         components: {
-            AceEditor
+            AceEditor: require('vue2-ace-editor')
         },
         computed: {
             originalPreview() {
@@ -199,6 +198,8 @@
                 require('brace/ext/language_tools')
                 require('brace/mode/css')
                 require('brace/mode/html')
+                require('brace/mode/json')
+                require('brace/theme/chrome')
             }
         },
         watch: {
