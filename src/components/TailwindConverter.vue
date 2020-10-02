@@ -66,7 +66,7 @@
                         <div class="h-full overflow-x-auto">
                             <div>original preview</div>
                             <iframe
-                                    v-bind:style="{width: this.originalPreviewWidth}"
+                                    v-bind:style="{width: originalPreviewWidth}"
                                     ref="originalPreview"
                                     :srcdoc="originalPreview"/>
                         </div>
@@ -130,20 +130,32 @@
                 let newWrapper = wrapper.cloneNode(true);
 
                 // lets loop through the sizes
-                for (let size in sizes) {
-                    this.originalPreviewWidth = size;
+                this.convertSize(wrapper, newWrapper, sizes);
+            },
+            convertSize(wrapper, newWrapper, sizes) {
+                let size = Object.keys(sizes)[0];
+                let prefix = '';
 
-                    console.log(size);
-                    setTimeout(() => {
-                        this.parse(wrapper, newWrapper, sizes[size] + ':');
-                    }, 100);
+                if ('responsive' !== sizes[size]) {
+                    prefix = sizes[size] + ':';
                 }
 
+                this.originalPreviewWidth = size;
+
                 setTimeout(() => {
-                    this.tailwindHtml = newWrapper.innerHTML;
+                    this.parse(wrapper, newWrapper, prefix);
+
+                    delete (sizes[size]);
+
+                    if (0 < Object.keys(sizes).length) {
+                        setTimeout(() => {
+                            this.convertSize(wrapper, newWrapper, sizes);
+                        }, 100);
+                    } else {
+                        this.tailwindHtml = newWrapper.innerHTML;
+                    }
                 }, 100);
             },
-
             /**
              *
              * @param {HTMLElement|Node} element

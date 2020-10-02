@@ -19,7 +19,7 @@ export function General(originalEle, newEle, prefix) {
             'flex': 'flex'
         }
     };
-
+console.log(style.display);
     for (let h in properties) {
         if (style[h] && properties[h].hasOwnProperty(style[h])) {
             classes.push(prefix + properties[h][style[h]]);
