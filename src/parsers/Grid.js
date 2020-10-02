@@ -6,8 +6,8 @@ import {Context} from "@/parsers/Context";
  * @param {Array} classes
  * @constructor
  */
-export function Flex(context, classes) {
-    if ('flex' === context.computedStyles.display) {
+export function Grid(context, classes) {
+    if ('grid' === context.computedStyles.display) {
         classes.push('flex');
     }
 }
