@@ -12,7 +12,10 @@ export const convertUnit = (
         converted = `${roundToNearestRem(remArray, value.split('rem')[0])}rem`;
     } else if (value.endsWith('px')) {
         converted = convertPxToRem(remArray, value, conversionFactor);
+    } else {
+        return null;
     }
+
     if (stripLeadingZeros) {
         converted = converted.replace(/^[0.]+/, '.');
     }
