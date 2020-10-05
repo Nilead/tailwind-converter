@@ -1,5 +1,5 @@
 {
-  "name": "tailwind",
+  "name": "tailwind-converter",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,19 +8,29 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "clone-deep": "^4.0.1",
     "core-js": "^3.6.5",
-    "vue": "^2.6.11",
+    "css-inliner": "^2.0.0",
+    "deepmerge": "^4.2.2",
+    "dns": "^0.2.2",
+    "extract-css": "^1.5.5",
+    "juice": "^7.0.0",
+    "net": "^1.0.2",
+    "setimmediate": "^1.0.5",
+    "vue": "^2.6.12",
     "vue2-ace-editor": "^0.0.15"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.4.0",
-    "@vue/cli-plugin-eslint": "~4.4.0",
-    "@vue/cli-service": "~4.4.0",
+    "@vue/cli-plugin-babel": "~4.4.6",
+    "@vue/cli-plugin-eslint": "~4.4.6",
+    "@vue/cli-service": "~4.4.6",
     "babel-eslint": "^10.1.0",
-    "eslint": "^6.7.2",
+    "brace": "^0.11.1",
+    "eslint": "^6.8.0",
     "eslint-plugin-vue": "^6.2.2",
-    "vue-cli-plugin-tailwind": "~1.4.1",
-    "vue-template-compiler": "^2.6.11"
+    "tailwindcss": "^1.8.10",
+    "vue-cli-plugin-tailwind": "^1.5.0",
+    "vue-template-compiler": "^2.6.12"
   },
   "useEslint": false,
   "eslintConfig": {
