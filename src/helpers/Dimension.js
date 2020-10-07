@@ -1,29 +1,42 @@
 import { convertUnit } from '@/helpers/UnitConverters';
 
+/**
+ * 
+ * @param {*} context 
+ * @param {*} classes 
+ * @param {*} dimension 
+ */
 export function matchClasses(context, classes, dimension) {
     let rules = [];
-    let dimensionEntries = [];
+    let dimensionEntries = [], remArray = [];
 
     Object.entries(context.tailwindSettings.theme[dimension]).every(dimensionEntry => {
         let dimensionMatch = dimensionEntry[1].match(/^([+-]?(?:\d+|\d*\.\d+))([a-z]*|%)$/);
 
         if (dimensionMatch) {
+            let numericValue = parseFloat(dimensionMatch[1]);
+            let unit = dimensionMatch[2];
+
             dimensionEntries.push({
                 className: dimensionEntry[0],
                 classValue: dimensionEntry[1],
                 value: dimensionMatch[1],
-                numericValue: parseFloat(dimensionMatch[1]),
-                unit: dimensionMatch[2]
+                numericValue: numericValue,
+                unit: unit
             });
+
+            if ('rem' === unit) {
+                remArray.push(numericValue);
+            }
         }
 
         return true;
     })
-console.log(context.matchedRules);
+
     // we prioritize 
     // lets attempt for exact match
     let matched = !context.matchedRules.every(rule => {
-        if (null !== rule.properties || 'object' !== typeof rule.properties) {
+        if (null === rule.properties || 'object' !== typeof rule.properties) {
             return true;
         }
 
@@ -31,7 +44,6 @@ console.log(context.matchedRules);
             if (dimension === prop[0] && 'active' === prop[1]['status']) {
                 let __matched = !dimensionEntries.every(dimensionEntry => {
                     if (prop[1]['value'] === dimensionEntry.classValue) {
-
                         // TODO: need to add prefix
                         classes.push(dimensionEntry.className);
                         return false;
@@ -42,7 +54,10 @@ console.log(context.matchedRules);
 
                 if (__matched) return false;
 
-                rules.push(prop[1]);
+                let match = prop[1].value.match(/^([+-]?(?:\d+|\d*\.\d+))([a-z]*|%)$/);
+                if (match) {
+                    rules.push(match);
+                }
             }
 
             return true;
@@ -51,63 +66,64 @@ console.log(context.matchedRules);
         return !_matched;
     })
 
-    let minDistance = null;
-    rules = rules.filter(rule => {
-        let match = rule.value.match(/^([+-]?(?:\d+|\d*\.\d+))([a-z]*|%)$/);
+    if (matched) return;
 
+    let minDistance = null;
+    rules = rules.filter(match => {
         if (match) {
             let bestMatch = null;
             let realValue = parseFloat(match[1]);
 
-            // we want to match, but we want to prioritize percent match first
+            // we want to match, but we want to prioritize matching same unit first
             // if we cannot find a good percent match, we can attemp to best match in px
-            if ('%' === match[2]) {
-                dimensionEntries.every(dimensionEntry => {
-                    if (dimensionEntry.type === match[2]) {                
-                        let distance = Math.abs(realValue - dimensionEntry.numericValue);
-    
-                        // we want to ensure that the distance is not greater than our defined threshold
-                        if (5 >= distance && (null === minDistance || minDistance > distance)) {
-                            bestMatch = dimensionEntry.className;
-                            minDistance = distance;
-                        }
-                    }
-    
-                    return true;
-                })
-            } else if ('%' === match[2]) {
-                // rem is our 2nd best choice
-                dimensionEntries.every(dimensionEntry => {
-                    if (dimensionEntry.type === match[2]) {                
-                        let distance = Math.abs(realValue - dimensionEntry.numericValue);
-    
-                        // we want to ensure that the distance is not greater than our defined threshold
-                        if (0.05 >= (distance / dimensionEntry.numericValue) && (null === minDistance || minDistance > distance)) {
-                            bestMatch = dimensionEntry.className;
-                            minDistance = distance;
-                        }
-                    }
-    
-                    return true;
-                })
-            } else {
-                // lets attempt to get the value in px
+            dimensionEntries.every(dimensionEntry => {
+                if (dimensionEntry.type === match[2]) {
+                    let distance = Math.abs(realValue - dimensionEntry.numericValue);
 
-            }
-            
+                    // we want to ensure that the distance is not greater than our defined threshold
+                    if (0.05 >= (distance / dimensionEntry.numericValue) && (null === minDistance || minDistance > distance)) {
+                        bestMatch = dimensionEntry.className;
+                        minDistance = distance;
+                    }
+                }
+
+                return true;
+            })
 
             if (bestMatch) {
                 classes.push(bestMatch);
+                matched = true;
+
                 return false;
             }
         }
 
         return true;
     })
-console.log(rules, classes);
-    // attempt to compare by px?
-    if (rules) {
 
+    if (matched) return;
+
+    let computedValue = parseFloat(context.computedStyles[dimension]);
+    let bestMatch = null;
+    minDistance = null;
+
+    dimensionEntries.forEach(dimensionEntry => {
+        let pxValue = convertUnit(dimensionEntry.numericValue, dimensionEntry.unit, context, dimension);
+
+        if (null !== pxValue) {
+            let distance = Math.abs(pxValue - computedValue); 
+            // we want to ensure that the distance is not greater than our defined threshold
+            // TODO: what if computedValue = 0?
+            
+            if (0.05 >= (distance / computedValue) && (null === minDistance || minDistance > distance)) {
+                bestMatch = dimensionEntry.className;
+                minDistance = distance;
+            }
+        }
+    })
+
+    if (bestMatch) {
+        classes.push(bestMatch);
     }
 
     return classes;

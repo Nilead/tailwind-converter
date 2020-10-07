@@ -185,17 +185,19 @@ export default {
       // first duplicate the tree
       let wrapper = this.$refs.originalPreview.contentWindow.document.querySelector('#converter-wrapper');
       let newWrapper = wrapper.cloneNode(true);
-
+      
       // lets loop through the sizes
       for (let size in sizes) {
         this.originalPreviewWidth = size;
 
         setTimeout(() => {
+          let remPx = parseFloat(getComputedStyle(this.$refs.originalPreview.contentDocument.documentElement).fontSize);
+
           CSSUtilities.define("page", this.$refs.originalPreview.contentDocument);
           // initialize
           CSSUtilities.init();
 
-          this.parse(wrapper, newWrapper, sizes[size]);
+          this.parse(wrapper, newWrapper, sizes[size], remPx);
 
           this.tailwindHtml = newWrapper.innerHTML;
         }, 100);
@@ -207,10 +209,11 @@ export default {
      * @param {HTMLElement|Node} element
      * @param {HTMLElement|Node} newElement
      * @param {String} size
+     * @param {String} size
      */
-    parse(element, newElement, size) {
+    parse(element, newElement, size, remPx) {
       if (element) {
-        let context = new Context(element, this.tailwindSettings);
+        let context = new Context(element, this.tailwindSettings, remPx);
 
         let classes = [];
 
@@ -233,7 +236,7 @@ export default {
 
         if (element.children.length) {
           for (let i = 0; i < element.children.length; i++) {
-            this.parse(element.children[i], newElement.children[i], size);
+            this.parse(element.children[i], newElement.children[i], size, remPx);
           }
         }
       }

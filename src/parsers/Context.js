@@ -5,6 +5,8 @@ export class Context {
 
     parsedProps = [];
 
+    remPx = null;
+
     computedStyles = {};
 
     matchedRules = {};
@@ -16,9 +18,10 @@ export class Context {
      * @param {HTMLElement} element
      * @param {Object} tailwindSettings
      */
-    constructor(element, tailwindSettings) {
+    constructor(element, tailwindSettings, remPx) {
         this.element = element;
         this.computedStyles = getComputedStyle(element);
+        this.remPx = remPx;
         this.matchedRules = CSSUtilities.getCSSRules(element, 'screen', null, true);
         this.tailwindSettings = tailwindSettings;
     }

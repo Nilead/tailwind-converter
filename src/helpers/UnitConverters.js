@@ -1,49 +1,82 @@
 // Attempts to round the units if possible to fit tailwind otherwise gives back the original value;
 // link: https://github.com/stevezease/tailwind-converter/blob/master/src/scripts/parser/unit-convert.js
 
+import { Context } from '@/parsers/Context';
+
+/**
+ * 
+ * @param {Integer} value 
+ * @param {String} unit 
+ * @param {Context} context 
+ * @param {String} context 
+ */
 export const convertUnit = (
-    remArray,
     value,
-    conversionFactor = 16,
-    stripLeadingZeros = false
+    unit,
+    context,
+    dimension
 ) => {
-    let converted = value;
-    if (value.endsWith('rem')) {
-        converted = `${roundToNearestRem(remArray, value.split('rem')[0])}rem`;
-    } else if (value.endsWith('px')) {
-        converted = convertPxToRem(remArray, value, conversionFactor);
-    } else {
-        return null;
+    if ('px' === unit) {
+        return value;
     }
 
-    if (stripLeadingZeros) {
-        converted = converted.replace(/^[0.]+/, '.');
+    if ('rem' === unit) {
+        return value * context.remPx;
     }
-    return converted;
-};
 
-const convertPxToRem = (remArray, value, conversionFactor = 16) => {
-    const numericVal = parseInt(value.split('px')[0]);
-    const min = Math.min(...remArray);
-    const max = Math.max(...remArray);
-    if (
-        numericVal &&
-        numericVal <= conversionFactor * max &&
-        numericVal >= conversionFactor * min
-    ) {
-        let rem = numericVal / conversionFactor;
-        const closest = roundToNearestRem(remArray, rem);
-        if (closest === 0) {
-            return 0;
-        } else {
-            return `${closest}rem`;
+    if ('em' === unit) {
+        return value * parseFloat(getComputedStyle(context.element.parentElement).fontSize);
+    }
+
+    if ('%' === unit) {
+        if ('width' === dimension) {
+            return value * parseFloat(getComputedStyle(context.element.parentElement).width) / 100;
+        } else if ('width' === dimension) {
+            return value * parseFloat(getComputedStyle(context.element.parentElement).height) / 100;
         }
     }
-    return value;
+
+    if ('vw' === unit) {
+        let document = context.element.ownerDocument;
+        return vwToPx(value, document.defaultView || document.parentWindow, document);
+    }
+
+    if ('vh' === unit) {
+        let document = context.element.ownerDocument;
+        return vhToPx(value, document.defaultView || document.parentWindow, document);
+    }
+
+    // handle vw and vh?
+
+    return null;
 };
 
-const roundToNearestRem = (remArray, num) => {
-    return remArray.reduce((prev, curr) => {
-        return Math.abs(curr - num) < Math.abs(prev - num) ? curr : prev;
-    });
-};
+
+/**
+ * @link https://stackoverflow.com/questions/16010204/get-reference-of-window-object-from-a-dom-element
+ * 
+ * @param {*} value 
+ * @param {*} window 
+ * @param {*} document 
+ */
+function vwToPx(value, window, document) {
+    var w = window,
+        d = document,
+        e = d.documentElement,
+        g = d.getElementsByTagName('body')[0],
+        x = w.innerWidth || e.clientWidth || g.clientWidth,
+        y = w.innerHeight || e.clientHeight || g.clientHeight;
+
+    return (x * value) / 100;
+}
+
+function vhToPx(value) {
+    var w = window,
+        d = document,
+        e = d.documentElement,
+        g = d.getElementsByTagName('body')[0],
+        x = w.innerWidth || e.clientWidth || g.clientWidth,
+        y = w.innerHeight || e.clientHeight || g.clientHeight;
+
+    return (y * value) / 100;
+}
