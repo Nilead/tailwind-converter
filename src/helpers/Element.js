@@ -49,6 +49,6 @@ export function getPercentRelativeToParent(element, computedStyle, property) {
 
     let pxValue = toPx(value);
     let pxParentValue = toPx(parentValue);
-console.log(pxValue, pxParentValue);
+
     return Math.round(pxValue / pxParentValue) * 100;
 }

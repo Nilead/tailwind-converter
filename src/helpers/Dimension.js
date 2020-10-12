@@ -19,7 +19,7 @@ export function matchClasses(context, classes, dimension) {
 
         return true;
     })
-console.log(context.matchedRules);
+
     // we prioritize 
     // lets attempt for exact match
     let matched = !context.matchedRules.every(rule => {
