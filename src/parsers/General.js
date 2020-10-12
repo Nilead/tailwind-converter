@@ -1,5 +1,4 @@
 import { Context } from "@/parsers/Context";
-import { RuleTester } from "eslint";
 
 /**
  * Map the general css properties to classes
@@ -300,7 +299,7 @@ export function General(context, classes) {
     };
 
     context.matchedRules.every(rule => {
-        if (null !== rule.properties || 'object' !== typeof rule.properties) {
+        if (null === rule.properties || 'object' !== typeof rule.properties) {
             return true;
         }
         console.log(rule.properties, typeof rule.properties);
