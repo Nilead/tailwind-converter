@@ -10,5 +10,7 @@ import { matchClasses } from "@/helpers/Dimension";
  */
 
 export function Height(context, classes) {
-    return matchClasses(context, classes, 'height');
+    return matchClasses(context, classes, 'height', function (dimensionEntry) {
+        return 'h-' + dimensionEntry.className;
+    });
 }
