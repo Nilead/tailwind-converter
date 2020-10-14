@@ -5,12 +5,20 @@ import { convertUnit } from '@/helpers/UnitConverters';
  * @param {*} context 
  * @param {*} classes 
  * @param {*} dimension 
+ * @param {*} callback
  */
-export function matchClasses(context, classes, dimension) {
+export function matchClasses(context, classes, dimension, callback) {
     let rules = [];
     let dimensionEntries = [], remArray = [];
 
-    Object.entries(context.tailwindSettings.theme[dimension]).every(dimensionEntry => {
+    let tailwindDimension = dimension;
+    if (-1 !== ['margin-top', 'margin-bottom', 'margin-left', 'margin-right'].indexOf(dimension)) {
+        tailwindDimension = 'margin';
+    } else if (-1 !== ['padding-top', 'padding-bottom', 'padding-left', 'padding-right'].indexOf(dimension)) {
+        tailwindDimension = 'padding';
+    }
+
+    Object.entries(context.tailwindSettings.theme[tailwindDimension]).every(dimensionEntry => {
         let dimensionMatch = dimensionEntry[1].match(/^([+-]?(?:\d+|\d*\.\d+))([a-z]*|%)$/);
 
         if (dimensionMatch) {
@@ -31,7 +39,7 @@ export function matchClasses(context, classes, dimension) {
         }
 
         return true;
-    })
+    });
 
     // we prioritize 
     // lets attempt for exact match
@@ -44,13 +52,12 @@ export function matchClasses(context, classes, dimension) {
             if (dimension === prop[0] && 'active' === prop[1]['status']) {
                 let __matched = !dimensionEntries.every(dimensionEntry => {
                     if (prop[1]['value'] === dimensionEntry.classValue) {
-                        // TODO: need to add prefix
-                        classes.push(dimensionEntry.className);
+                        classes.push(callback(dimensionEntry));
                         return false;
                     }
 
                     return true;
-                })
+                });
 
                 if (__matched) return false;
 
@@ -61,10 +68,10 @@ export function matchClasses(context, classes, dimension) {
             }
 
             return true;
-        })
+        });
 
         return !_matched;
-    })
+    });
 
     if (matched) return;
 
@@ -82,16 +89,16 @@ export function matchClasses(context, classes, dimension) {
 
                     // we want to ensure that the distance is not greater than our defined threshold
                     if (0.05 >= (distance / dimensionEntry.numericValue) && (null === minDistance || minDistance > distance)) {
-                        bestMatch = dimensionEntry.className;
+                        bestMatch = dimensionEntry;
                         minDistance = distance;
                     }
                 }
 
                 return true;
-            })
+            });
 
             if (bestMatch) {
-                classes.push(bestMatch);
+                classes.push(callback(bestMatch));
                 matched = true;
 
                 return false;
@@ -99,7 +106,7 @@ export function matchClasses(context, classes, dimension) {
         }
 
         return true;
-    })
+    });
 
     if (matched) return;
 
@@ -114,16 +121,16 @@ export function matchClasses(context, classes, dimension) {
             let distance = Math.abs(pxValue - computedValue); 
             // we want to ensure that the distance is not greater than our defined threshold
             // TODO: what if computedValue = 0?
-            
+
             if (0.05 >= (distance / computedValue) && (null === minDistance || minDistance > distance)) {
-                bestMatch = dimensionEntry.className;
+                bestMatch = dimensionEntry;
                 minDistance = distance;
             }
         }
-    })
+    });
 
     if (bestMatch) {
-        classes.push(bestMatch);
+        classes.push(callback(bestMatch));
     }
 
     return classes;

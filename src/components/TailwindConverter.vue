@@ -115,6 +115,8 @@ import {Flex} from '@/parsers/Flex';
 import {Grid} from '@/parsers/Grid';
 import {Width} from '@/parsers/Width';
 import {Height} from '@/parsers/Height';
+import {Padding} from '@/parsers/Padding';
+import {Margin} from '@/parsers/Margin';
 
 // import 'setimmediate';
 // const CSSInliner = require('css-inliner');
@@ -128,7 +130,7 @@ console.log(defaultConfig, tailwindSettings);
 const deepmerge = require('deepmerge');
 const cloneDeep = require('clone-deep');
 
-let parsers = {default: General, flex: Flex, grid: Grid, width: Width, height: Height};
+let parsers = {default: General, flex: Flex, grid: Grid, width: Width, height: Height, padding: Padding, margin: Margin};
 
 export default {
   name: 'TailwindConverter',
