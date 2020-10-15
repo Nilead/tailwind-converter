@@ -8,15 +8,31 @@ import { convertUnit } from '@/helpers/UnitConverters';
  * @param {*} callback
  */
 export function matchClasses(context, classes, dimension, callback) {
-    let rules = [];
-    let dimensionEntries = [], remArray = [];
-
     let tailwindDimension = dimension;
     if (-1 !== ['margin-top', 'margin-bottom', 'margin-left', 'margin-right'].indexOf(dimension)) {
         tailwindDimension = 'margin';
     } else if (-1 !== ['padding-top', 'padding-bottom', 'padding-left', 'padding-right'].indexOf(dimension)) {
         tailwindDimension = 'padding';
     }
+
+    let matched = !context.matchedRules.every(rule => {
+        if (null === rule.properties || 'object' !== typeof rule.properties) {
+            return true;
+        }
+
+        return Object.entries(rule.properties).every(prop => {
+            if ((dimension === prop[0] || tailwindDimension === prop[0]) && 'active' === prop[1]['status']) {
+                return false;
+            }
+
+            return true;
+        });
+    });
+
+    if (!matched) return;
+
+    let rules = [];
+    let dimensionEntries = [], remArray = [];
 
     Object.entries(context.tailwindSettings.theme[tailwindDimension]).every(dimensionEntry => {
         let dimensionMatch = dimensionEntry[1].match(/^([+-]?(?:\d+|\d*\.\d+))([a-z]*|%)$/);
@@ -43,7 +59,7 @@ export function matchClasses(context, classes, dimension, callback) {
 
     // we prioritize 
     // lets attempt for exact match
-    let matched = !context.matchedRules.every(rule => {
+    matched = !context.matchedRules.every(rule => {
         if (null === rule.properties || 'object' !== typeof rule.properties) {
             return true;
         }

@@ -10,7 +10,7 @@ import { matchClasses } from "@/helpers/Dimension";
  */
 
 export function Width(context, classes) {
-    return matchClasses(context, classes, 'width', function (dimensionEntry) {
+    matchClasses(context, classes, 'width', function (dimensionEntry) {
         return 'w-' + dimensionEntry.className;
     });
 }
