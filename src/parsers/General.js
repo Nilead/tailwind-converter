@@ -302,19 +302,21 @@ export function General(context, classes) {
         if (null === rule.properties || 'object' !== typeof rule.properties) {
             return true;
         }
-        console.log(rule.properties, typeof rule.properties);
+
         Object.entries(rule.properties).every(prop => {
             if ('active' === prop[1]['status']) {
                 if (properties.hasOwnProperty(prop[0])) {
-                    if (properties[prop[0]].hasOwnProperty(prop[1]['value'])) {
-                        classes.push(properties[prop[0]][prop[1]['value']]);                       
-                    }                
+                    let value = prop[1]['value'].replace(/\s+/g, ' ');
+
+                    if (properties[prop[0]].hasOwnProperty(value)) {
+                        classes.push(properties[prop[0]][value]);
+                    }
                 }
             }
-        })
+
+            return true;
+        });
 
         return true;
-    })
-
-    return classes;
+    });
 }

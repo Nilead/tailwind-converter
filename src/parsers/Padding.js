@@ -10,15 +10,7 @@ import { matchClasses } from "@/helpers/Dimension";
  */
 
 export function Padding(context, classes) {
-    classes = matchClasses(context, classes, 'padding', function (dimensionEntry) {
-        if (0 <= dimensionEntry.value) {
-            return 'p-' + dimensionEntry.className;
-        } else {
-            return '-p' + dimensionEntry.className;
-        }
-    });
-
-    classes = matchClasses(context, classes, 'padding-top', function (dimensionEntry) {
+    matchClasses(context, classes, 'padding-top', function (dimensionEntry) {
         if (0 <= dimensionEntry.value) {
             return 'pt-' + dimensionEntry.className;
         } else {
@@ -26,7 +18,7 @@ export function Padding(context, classes) {
         }
     });
 
-    classes = matchClasses(context, classes, 'padding-bottom', function (dimensionEntry) {
+    matchClasses(context, classes, 'padding-bottom', function (dimensionEntry) {
         if (0 <= dimensionEntry.value) {
             return 'pb-' + dimensionEntry.className;
         } else {
@@ -34,7 +26,7 @@ export function Padding(context, classes) {
         }
     });
 
-    classes = matchClasses(context, classes, 'padding-left', function (dimensionEntry) {
+    matchClasses(context, classes, 'padding-left', function (dimensionEntry) {
         if (0 <= dimensionEntry.value) {
             return 'pl-' + dimensionEntry.className;
         } else {
@@ -42,13 +34,11 @@ export function Padding(context, classes) {
         }
     });
 
-    classes = matchClasses(context, classes, 'padding-right', function (dimensionEntry) {
+    matchClasses(context, classes, 'padding-right', function (dimensionEntry) {
         if (0 <= dimensionEntry.value) {
             return 'pr-' + dimensionEntry.className;
         } else {
             return '-pr' + dimensionEntry.className;
         }
     });
-
-    return classes;
 }

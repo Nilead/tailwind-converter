@@ -10,15 +10,7 @@ import { matchClasses } from "@/helpers/Dimension";
  */
 
 export function Margin(context, classes) {
-    classes = matchClasses(context, classes, 'margin', function (dimensionEntry) {
-        if (0 <= dimensionEntry.value) {
-            return 'm-' + dimensionEntry.className;
-        } else {
-            return '-m' + dimensionEntry.className;
-        }
-    });
-
-    classes = matchClasses(context, classes, 'margin-top', function (dimensionEntry) {
+    matchClasses(context, classes, 'margin-top', function (dimensionEntry) {
         if (0 <= dimensionEntry.value) {
             return 'mt-' + dimensionEntry.className;
         } else {
@@ -26,7 +18,7 @@ export function Margin(context, classes) {
         }
     });
 
-    classes = matchClasses(context, classes, 'margin-bottom', function (dimensionEntry) {
+    matchClasses(context, classes, 'margin-bottom', function (dimensionEntry) {
         if (0 <= dimensionEntry.value) {
             return 'mb-' + dimensionEntry.className;
         } else {
@@ -34,7 +26,7 @@ export function Margin(context, classes) {
         }
     });
 
-    classes = matchClasses(context, classes, 'margin-left', function (dimensionEntry) {
+    matchClasses(context, classes, 'margin-left', function (dimensionEntry) {
         if (0 <= dimensionEntry.value) {
             return 'ml-' + dimensionEntry.className;
         } else {
@@ -42,13 +34,11 @@ export function Margin(context, classes) {
         }
     });
 
-    classes = matchClasses(context, classes, 'margin-right', function (dimensionEntry) {
+    matchClasses(context, classes, 'margin-right', function (dimensionEntry) {
         if (0 <= dimensionEntry.value) {
             return 'mr-' + dimensionEntry.className;
         } else {
             return '-mr' + dimensionEntry.className;
         }
     });
-
-    return classes;
 }
