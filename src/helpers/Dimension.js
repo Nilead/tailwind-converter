@@ -1,5 +1,7 @@
 import { convertUnit } from '@/helpers/UnitConverters';
 
+const camelCase = require('camelcase');
+
 /**
  * 
  * @param {*} context 
@@ -8,11 +10,19 @@ import { convertUnit } from '@/helpers/UnitConverters';
  * @param {*} callback
  */
 export function matchClasses(context, classes, dimension, callback) {
-    let tailwindDimension = dimension;
+    let tailwindDimension = null;
     if (-1 !== ['margin-top', 'margin-bottom', 'margin-left', 'margin-right'].indexOf(dimension)) {
         tailwindDimension = 'margin';
     } else if (-1 !== ['padding-top', 'padding-bottom', 'padding-left', 'padding-right'].indexOf(dimension)) {
         tailwindDimension = 'padding';
+    } else if (-1 !== ['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'].indexOf(dimension)) {
+        tailwindDimension = 'borderRadius';
+    } else if (-1 !== ['border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width'].indexOf(dimension)) {
+        tailwindDimension = 'borderWidth';
+    } else if ('--bg-opacity' === dimension) {
+        tailwindDimension = 'backgroundOpacity';
+    } else {
+        tailwindDimension = camelCase(dimension);
     }
 
     let matched = !context.matchedRules.every(rule => {
@@ -21,11 +31,7 @@ export function matchClasses(context, classes, dimension, callback) {
         }
 
         return Object.entries(rule.properties).every(prop => {
-            if ((dimension === prop[0] || tailwindDimension === prop[0]) && 'active' === prop[1]['status']) {
-                return false;
-            }
-
-            return true;
+            return !((dimension === prop[0] || tailwindDimension === prop[0]) && 'active' === prop[1]['status']);
         });
     });
 
