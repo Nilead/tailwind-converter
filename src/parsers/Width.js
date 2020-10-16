@@ -13,4 +13,8 @@ export function Width(context, classes) {
     matchClasses(context, classes, 'width', function (dimensionEntry) {
         return 'w-' + dimensionEntry.className;
     });
+
+    matchClasses(context, classes, 'max-width', function (dimensionEntry) {
+        return 'max-w-' + dimensionEntry.className;
+    });
 }
