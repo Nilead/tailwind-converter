@@ -214,6 +214,8 @@ export default {
           let remPx = parseFloat(getComputedStyle(this.$refs.originalPreview.contentDocument.documentElement).fontSize);
 
           CSSUtilities.define("page", this.$refs.originalPreview.contentDocument);
+          CSSUtilities.define("watch", false);
+
           // initialize
           CSSUtilities.init();
 
