@@ -3072,7 +3072,7 @@ export function CSSUtilities() {
     //now iterate through all the stored cssRules
     for (var i = 0; i < THIS._cssRules.length; i++) {
       //if the rule doesn't match the input media criteria, we don't want it
-      if (!WINDOW.matchMedia(THIS._cssRules[i].rule).matches) {
+      if (!WINDOW.matchMedia(THIS._cssRules[i].media).matches) {
         continue;
       }
       // console.time('getElementsBySelector');
