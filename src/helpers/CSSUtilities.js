@@ -41,13 +41,13 @@ export function CSSUtilities() {
   if (
 
     //this generally excludes pre-DOM1 browsers
-    typeof document.getElementById == 'undefined'
+    typeof document.getElementById === 'undefined'
 
     //this excludes Opera 8
-    || typeof document.styleSheets == 'undefined'
+    || typeof document.styleSheets === 'undefined'
 
     //this excludes IE 5.5
-    || typeof document.nodeType == 'undefined'
+    || typeof document.nodeType === 'undefined'
 
     //exit on failure
   ) {
@@ -57,6 +57,7 @@ export function CSSUtilities() {
   //if we're still here, set the supported flag to true
   this.supported = true;
 
+  var parsedCssRules = new WeakMap();
 
   //-- start local variable declarations --//
   //-- nb. the breaks in string values are to avoid unwanted compression --//
@@ -86,6 +87,7 @@ export function CSSUtilities() {
     FATAL_ERROR_PREFIX = 'CSSUtilities ' + '(Fatal Error):',
     FATAL_ERROR_INVALID_MODE = FATAL_ERROR_PREFIX + ' The specified mode is not valid',
     FATAL_ERROR_INVALID_ASYNC = FATAL_ERROR_PREFIX + ' The specified async setting is not valid',
+    FATAL_ERROR_NOT_WINDOW = FATAL_ERROR_PREFIX + ' The specified object is not a Window',
     FATAL_ERROR_NOT_DOCUMENT = FATAL_ERROR_PREFIX + ' The specified document is not a Document',
     FATAL_ERROR_NOT_ABSOLUTE_URI = FATAL_ERROR_PREFIX + ' The specified base is not an absolute URL',
     FATAL_ERROR_INVALID_WATCH = FATAL_ERROR_PREFIX + ' The specified watch setting is not valid',
@@ -116,7 +118,7 @@ export function CSSUtilities() {
     MEDIA_TYPES_LIST = 'aural,braille,embossed,handheld,print,projection,reader,screen,speech,tty,tv',
 
     //alphabetical dictionary of inheritable CSS properties
-    //we only actually need the keys, so we can go typeof INHERITED_PROPS[key] != 'undefined'
+    //we only actually need the keys, so we can go typeof INHERITED_PROPS[key] !== 'undefined'
     //but the values are used for dev reference, so that we know the status of each property:
     //	'2'		CSS2 properties
     //	'3'		CSS3 properties
@@ -352,12 +354,12 @@ export function CSSUtilities() {
     //the webkit condition catches generic webkit UAs such as Google Chrome
     //and the Adobe AIR runtime; the safari definition is split like this
     //so that it doesn't get compressed (that single space is crucial!)
-    SAFARI = navigator.vendor == 'Apple Computer,' + ' Inc.',
+    SAFARI = navigator.vendor === 'Apple Computer,' + ' Inc.',
     SAFARI3 = SAFARI && /version\/3/i.test(navigator.appVersion),
-    KONQUEROR = navigator.vendor == 'KDE',
+    KONQUEROR = navigator.vendor === 'KDE',
     WEBKIT = /applewebkit/i.test(navigator.userAgent),
-    IEXPLORER = typeof document.uniqueID != TYPE_UNDEFINED,
-    OPERA = typeof window.opera != TYPE_UNDEFINED,
+    IEXPLORER = typeof document.uniqueID !== TYPE_UNDEFINED,
+    OPERA = typeof window.opera !== TYPE_UNDEFINED,
 
     //timer speed for the routine that watches for stylesheets being
     //enabled and disabled, and then re-initializes automatically
@@ -403,8 +405,11 @@ export function CSSUtilities() {
     //whether to get data asynchronously
     async = BOOLEAN_FALSE,
 
+    //context window
+    WINDOW = window,
+
     //context document
-    page = document,
+    DOCUMENT = document,
 
     //base for qualifying stylesheet hrefs, can't be defined until init
     //because it refers to page, which may change between now and then
@@ -439,7 +444,7 @@ export function CSSUtilities() {
       case 'mode' :
 
         //must be "author" or "browser"
-        if (typeof value1 != TYPE_STRING || !/^(author|browser)$/i.test(value1)) {
+        if (typeof value1 !== TYPE_STRING || !/^(author|browser)$/i.test(value1)) {
           throw(new Error(FATAL_ERROR_INVALID_MODE));
         }
 
@@ -447,7 +452,7 @@ export function CSSUtilities() {
         mode = value1;
 
         //if mode is now "browser" check that "watch" is not null
-        if (mode == MODE_BROWSER && watch === NULL_VALUE) {
+        if (mode === MODE_BROWSER && watch === NULL_VALUE) {
           throw(new Error(FATAL_ERROR_INVALID_WATCH));
         }
 
@@ -457,7 +462,7 @@ export function CSSUtilities() {
       case 'async' :
 
         //must be a boolean
-        if (typeof value1 != TYPE_BOOLEAN) {
+        if (typeof value1 !== TYPE_BOOLEAN) {
           throw(new Error(FATAL_ERROR_INVALID_ASYNC));
         }
 
@@ -467,21 +472,34 @@ export function CSSUtilities() {
         break;
 
       //"page"
+      case 'window' :
+
+        //must be a #document node
+        if (!(value1.document && value1.location && value1.alert && value1.setInterval)) {
+          throw(new Error(FATAL_ERROR_NOT_WINDOW));
+        }
+
+        //save the value
+        WINDOW = value1;
+
+        break;
+
+      //"page"
       case 'page' :
 
         //if "api" already has a user-definition,
         //throw the error that says this must be defined first
-        if (apidefined == BOOLEAN_TRUE) {
+        if (apidefined === BOOLEAN_TRUE) {
           throw(new Error(errorMessageNotAfterAPI.replace('%var', 'page')));
         }
 
         //must be a #document node
-        if (typeof value1.nodeType == TYPE_UNDEFINED || value1.nodeType != 9) {
+        if (typeof value1.nodeType === TYPE_UNDEFINED || value1.nodeType !== 9) {
           throw(new Error(FATAL_ERROR_NOT_DOCUMENT));
         }
 
         //save the value
-        page = value1;
+        DOCUMENT = value1;
 
         break;
 
@@ -490,12 +508,12 @@ export function CSSUtilities() {
 
         //if "api" already has a user-definition,
         //throw the error that says this must be defined first
-        if (apidefined == BOOLEAN_TRUE) {
+        if (apidefined === BOOLEAN_TRUE) {
           throw(new Error(errorMessageNotAfterAPI.replace('%var', 'base')));
         }
 
         //must be an absolute URI string
-        if (typeof value1 != TYPE_STRING || !/^(((ht|f)tp[s]?)\:)/i.test(value1)) {
+        if (typeof value1 !== TYPE_STRING || !/^(((ht|f)tp[s]?)\:)/i.test(value1)) {
           throw(new Error(FATAL_ERROR_NOT_ABSOLUTE_URI));
         }
 
@@ -508,7 +526,7 @@ export function CSSUtilities() {
       case 'attributes' :
 
         //must be a boolean
-        if (typeof value1 != TYPE_BOOLEAN) {
+        if (typeof value1 !== TYPE_BOOLEAN) {
           throw(new Error(FATAL_ERROR_INVALID_ATTRS));
         }
 
@@ -522,7 +540,7 @@ export function CSSUtilities() {
 
         //must be true or false in browser mode
         //must be true, false or null in author mode
-        if (!(typeof value1 == TYPE_BOOLEAN || (mode == MODE_AUTHOR && value1 == NULL_VALUE))) {
+        if (!(typeof value1 === TYPE_BOOLEAN || (mode === MODE_AUTHOR && value1 === NULL_VALUE))) {
           throw(new Error(FATAL_ERROR_INVALID_WATCH));
         }
 
@@ -535,13 +553,13 @@ export function CSSUtilities() {
       case 'api' :
 
         //must be a boolean
-        if (typeof value1 != TYPE_BOOLEAN) {
+        if (typeof value1 !== TYPE_BOOLEAN) {
           throw(new Error(FATAL_ERROR_NOT_SAPI));
         }
 
         //and its function if specified must be a function
-        if (typeof value2 != TYPE_UNDEFINED) {
-          if (typeof value2 != TYPE_FUNCTION) {
+        if (typeof value2 !== TYPE_UNDEFINED) {
+          if (typeof value2 !== TYPE_FUNCTION) {
             throw(new Error(FATAL_ERROR_NOT_SAPI));
           }
         }
@@ -549,8 +567,8 @@ export function CSSUtilities() {
         //the api property is false if we have native support, or null if we don't
         //so if this gets set to [or left as] false that means use native where supported
         //or if it gets set to true that means use the backup function for everyone
-        if (value1 == BOOLEAN_FALSE) {
-          api = typeof page.querySelectorAll == TYPE_UNDEFINED;
+        if (value1 === BOOLEAN_FALSE) {
+          api = typeof DOCUMENT.querySelectorAll === TYPE_UNDEFINED;
         } else {
           api = BOOLEAN_TRUE;
         }
@@ -564,9 +582,9 @@ export function CSSUtilities() {
         //if we have a function definition, pre-test it to make sure
         //that it returns the correct data structure (an array or nodelist)
         //and if not throw a fatal error
-        if (typeof value2 == TYPE_FUNCTION) {
-          var nodes = value2('*', page);
-          if (typeof nodes != TYPE_OBJECT || nodes == NULL_VALUE || typeof nodes.length == TYPE_UNDEFINED) {
+        if (typeof value2 === TYPE_FUNCTION) {
+          var nodes = value2('*', DOCUMENT);
+          if (typeof nodes !== TYPE_OBJECT || nodes === NULL_VALUE || typeof nodes.length === TYPE_UNDEFINED) {
             throw(new Error(FATAL_ERROR_INVALID_SAPI));
           }
 
@@ -575,7 +593,6 @@ export function CSSUtilities() {
         }
 
         break;
-
     }
   };
 
@@ -598,19 +615,19 @@ export function CSSUtilities() {
 
     //if querySelectorAll is supported, and api has not been set to true, set it to false
     //false means we can use the native method if supported; true means use the backup for all
-    api = (typeof page.querySelectorAll != TYPE_UNDEFINED && api !== BOOLEAN_TRUE)
+    api = (typeof DOCUMENT.querySelectorAll !== TYPE_UNDEFINED && api !== BOOLEAN_TRUE)
       ? BOOLEAN_FALSE
       : BOOLEAN_TRUE;
 
     //if base hasn't been defined, do so now
-    if (base == NULL_VALUE) {
-      base = page.location.href;
+    if (base === NULL_VALUE) {
+      base = DOCUMENT.location.href;
     }
 
     //detect XML (including HTML in XHTML mode)
     //opera doens't support document.xmlVersion so it has a different test
-    this._isXML = (OPERA && page.documentElement.namespaceURI != NULL_VALUE)
-      || (!OPERA && (typeof page.xmlVersion != TYPE_UNDEFINED && page.xmlVersion != NULL_VALUE));
+    this._isXML = (OPERA && DOCUMENT.documentElement.namespaceURI !== NULL_VALUE)
+      || (!OPERA && (typeof DOCUMENT.xmlVersion !== TYPE_UNDEFINED && DOCUMENT.xmlVersion !== NULL_VALUE));
 
     //get the current page view media
     this._viewmedia = getViewMedia();
@@ -632,7 +649,7 @@ export function CSSUtilities() {
       CSSUtilities._allready = BOOLEAN_TRUE;
 
       //if callback is a function, save the reference and call it
-      if (typeof callback == TYPE_FUNCTION) {
+      if (typeof callback === TYPE_FUNCTION) {
         CSSUtilities.initcallback = callback;
         CSSUtilities.initcallback();
       }
@@ -644,8 +661,8 @@ export function CSSUtilities() {
       }
 
       //***DEV
-      //function dbSize(obj){function stringify(obj){var str = '';for(var i in obj){if(!obj.hasOwnProperty(i)) { continue; }if(typeof obj[i] == TYPE_STRING){str += obj[i];}else{str += stringify(obj[i]);}}return str;}return stringify(obj).length;}
-      //document.title = (typeof time != TYPE_UNDEFINED ? '(' + time + 'ms) | ' : '') + 'mode=' + mode + ' | async=' + async + ' | dbsize=' + (Math.round(dbSize(THIS._cssRules) / 10) / 100) + 'KiB | ' + new Date().toUTCString();
+      //function dbSize(obj){function stringify(obj){var str = '';for(var i in obj){if(!obj.hasOwnProperty(i)) { continue; }if(typeof obj[i] === TYPE_STRING){str += obj[i];}else{str += stringify(obj[i]);}}return str;}return stringify(obj).length;}
+      //document.title = (typeof time !== TYPE_UNDEFINED ? '(' + time + 'ms) | ' : '') + 'mode=' + mode + ' | async=' + async + ' | dbsize=' + (Math.round(dbSize(THIS._cssRules) / 10) / 100) + 'KiB | ' + new Date().toUTCString();
     }
 
     //create the new cssRules and stylesheets arrays
@@ -660,7 +677,7 @@ export function CSSUtilities() {
     //all the other methods will work off this data so that
     //we don't have to query the stylesheets collection more than once per session
     //(unless it's dynamically changed, after which we have to re-init())
-    if (mode == MODE_AUTHOR) {
+    if (mode === MODE_AUTHOR) {
       createAuthorRulesData(localcallback);
     } else {
       createBrowserRulesData(localcallback);
@@ -672,7 +689,7 @@ export function CSSUtilities() {
   //	var str='\n\n\n'
   //		+ '--[ raw da'+'ta dump ]------------------------------------------------------------------------------\n\n'
   //		+ '';
-  //	for(var i=0; i<THIS._cssRules.length; i++){str+=i+':\n';for(var j in THIS._cssRules[i]){str += '\t"' + j + '": ';if(typeof THIS._cssRules[i][j] == TYPE_STRING) { str += '"'; }str += THIS._cssRules[i][j];if(typeof THIS._cssRules[i][j] == TYPE_STRING) { str += '"'; }str += '\n';}}return str;
+  //	for(var i=0; i<THIS._cssRules.length; i++){str+=i+':\n';for(var j in THIS._cssRules[i]){str += '\t"' + j + '": ';if(typeof THIS._cssRules[i][j] === TYPE_STRING) { str += '"'; }str += THIS._cssRules[i][j];if(typeof THIS._cssRules[i][j] === TYPE_STRING) { str += '"'; }str += '\n';}}return str;
   //};
 
   //public getCSSStyleSheets returns all the stylesheets
@@ -701,19 +718,27 @@ export function CSSUtilities() {
 
   //public getCSSRules return all the style rules
   //that apply to an element within a specified media
-  this.getCSSRules = function () {
+  /**
+   *
+   * @param element
+   * @param media
+   * @param accept
+   * @param altstates
+   * @param onfinished
+   * @return {undefined}
+   */
+  this.getCSSRules = function (element, media, accept, altstates, onfinished) {
     //process the arguments to create an indexed object
-    var args = processArguments(arguments, ['element', 'media', 'accept', 'altstates']);
 
     //process the element argument
     //this creates an element reference from an ID
     //and/or throws an error if the element us undefined, null, or not an element
-    args.element = processElementArgument(args.element, 'getCSSRules');
+    element = processElementArgument(element, 'getCSSRules');
 
     //process the media argument
     //this sets default if undefined, empty or null
     //then splits it into a trimmmed array
-    args.media = processMediaArgument(args.media);
+    media = processMediaArgument(media);
 
     //process the accept argument
     //this parameter allows us to limit how much data is retrieved
@@ -729,32 +754,31 @@ export function CSSUtilities() {
     //or an object of properties, eg. selector and css
     //this is so we can easily go typeof accept[key] against a property name
     //rather than having to test for substrings each time
-    args.accept = processAcceptArgument(args.accept);
+    accept = processAcceptArgument(accept);
 
     //if altstates is null, make it false
     //the altstates parameter specifies whether to include selectors as being applicable
     //that apply to interactive states of the element which it isn't necessarily in at the moment
     //and which are all defined in pseudo-classes such as :visited and :hover
-    if (args.altstates == NULL_VALUE) {
-      args.altstates = BOOLEAN_FALSE;
+    if (altstates === NULL_VALUE) {
+      altstates = BOOLEAN_FALSE;
     }
 
     //process the onfinished argument,
     //which sets it to null if undefined or not a function, for ease of reference
-    args.onfinished = processOnfinishedArgument(args.onfinished);
+    onfinished = processOnfinishedArgument(onfinished);
 
     //if the script hasn't been initialized, do so now
     lateinit();
-
+    // console.timeEnd('preparing');
     //create an internal wrapper for the rest of this function
     //so that we can call it differently for callback or return
     //then wrap the whole thing in a returned call to the
     //dispatchReturn method, which abstracts that process,
-    return dispatchReturn(args.onfinished, function () {
+    return dispatchReturn(onfinished, function () {
       //get and return the rule objects for the specified media
       //passing on the accept and altstates arguments directly for processing in getCSSRules
-      return getCSSRules(args.element, args.media, args.accept, args.altstates);
-
+      return getCSSRules(element, media, accept, altstates);
     });
   };
 
@@ -777,7 +801,7 @@ export function CSSUtilities() {
     //if accept contains "properties" but not "css"
     //we need css to get properties, so add it to the accept object
     //but then set a flag so that we know to delete it again at the end
-    if (typeof args.accept.properties != TYPE_UNDEFINED && typeof args.accept.css == TYPE_UNDEFINED) {
+    if (typeof args.accept.properties !== TYPE_UNDEFINED && typeof args.accept.css === TYPE_UNDEFINED) {
       args.accept.css = '';
       var deletecss = BOOLEAN_TRUE;
     }
@@ -797,7 +821,7 @@ export function CSSUtilities() {
     lateinit();
 
     //if ssid is specified but invalid (ie. there's no stylesheet with that ssid), throw an error
-    if (args.ssid !== -1 && arrayContains(this._stylesheets, args.ssid, 'ssid') == NULL_VALUE) {
+    if (args.ssid !== -1 && arrayContains(this._stylesheets, args.ssid, 'ssid') === NULL_VALUE) {
       throw(new Error(errorMessageInvalidSSID.replace('%method', 'getCSSStyleSheetRules')));
     }
 
@@ -831,13 +855,13 @@ export function CSSUtilities() {
               continue;
             }
 
-            if (args.accept == '*' || typeof args.accept[j] != TYPE_UNDEFINED) {
+            if (args.accept === '*' || typeof args.accept[j] !== TYPE_UNDEFINED) {
               cssrule[j] = THIS._cssRules[i][j];
             }
           }
 
           //add the index property, if defined in accept or accept is "*"
-          if (args.accept == '*' || typeof args.accept.index != TYPE_UNDEFINED) {
+          if (args.accept === '*' || typeof args.accept.index !== TYPE_UNDEFINED) {
             cssrule.index = i;
           }
 
@@ -850,13 +874,13 @@ export function CSSUtilities() {
       //pass the rules array to the addSortedProperties object
       //but with a false dosort argument so that it returns all the properties equally
       //rather than identifying and marking all the cancelled and inactive ones
-      if (typeof args.accept.properties != TYPE_UNDEFINED || args.accept === '*') {
+      if (typeof args.accept.properties !== TYPE_UNDEFINED || args.accept === '*') {
         rules = addSortedProperties(rules, BOOLEAN_FALSE);
       }
 
       //if the deletecss flag is defined, we need to
       //nullify and delete all the css properties
-      if (typeof deletecss != TYPE_UNDEFINED) {
+      if (typeof deletecss !== TYPE_UNDEFINED) {
         for (var i = 0; i < rules.length; i++) {
           rules[i].css = NULL_VALUE;
           delete rules[i].css;
@@ -907,7 +931,7 @@ export function CSSUtilities() {
       var rules = getCSSRules(args.element, args.media, 'properties', BOOLEAN_FALSE);
 
       //if there are no rules returned, return null for failure
-      if (rules.length == 0) {
+      if (rules.length === 0) {
         return NULL_VALUE;
       }
 
@@ -917,7 +941,7 @@ export function CSSUtilities() {
       for (var i = 0; i < rules.length; i++) {
         for (var j in rules[i].properties) {
           if (!rules[i].properties.hasOwnProperty(j)
-            || rules[i].properties[j].status != STATUS_ACTIVE) {
+            || rules[i].properties[j].status !== STATUS_ACTIVE) {
             continue;
           }
 
@@ -950,7 +974,7 @@ export function CSSUtilities() {
     args.media = processMediaArgument(args.media);
 
     //if the directonly flag is null, default to true
-    if (args.directonly == NULL_VALUE) {
+    if (args.directonly === NULL_VALUE) {
       args.directonly = BOOLEAN_TRUE;
     }
 
@@ -981,14 +1005,14 @@ export function CSSUtilities() {
       for (var i = 0; i < rules.length; i++) {
         var selectors = parseSelectorText(rules[i].selector);
         for (var j = 0; j < selectors.length; j++) {
-          if (arrayContains(allselectors, selectors[j]) == NULL_VALUE) {
+          if (arrayContains(allselectors, selectors[j]) === NULL_VALUE) {
             allselectors.push(selectors[j]);
           }
         }
       }
 
       //if we want inherited as well as direct selectors
-      if (args.directonly == BOOLEAN_FALSE) {
+      if (args.directonly === BOOLEAN_FALSE) {
         //we have to iterate through it and remove any selectors
         //which don't apply to the element or to any of its ancestors
         //nb. we remove any state-dependent pseudo-classes from the test selector each time
@@ -1005,18 +1029,18 @@ export function CSSUtilities() {
             var nodes = getElementsBySelector(allselectors[i].replace(REGEX_PSEUDO_CLASSES_EXCEPT_NOT, ''));
             if (nodes.length > 0) {
               for (var k = 0; k < nodes.length; k++) {
-                if (nodes[k] == ancestors[j]) {
+                if (nodes[k] === ancestors[j]) {
                   applies = BOOLEAN_TRUE;
                   break;
                 }
               }
             }
-            if (applies == BOOLEAN_TRUE) {
+            if (applies === BOOLEAN_TRUE) {
               break;
             }
           }
           //if it doens't apply remove it from the array
-          if (applies == BOOLEAN_FALSE) {
+          if (applies === BOOLEAN_FALSE) {
             allselectors.splice(i, 1);
             i--;
           }
@@ -1039,7 +1063,7 @@ export function CSSUtilities() {
         var nodes = getElementsBySelector(allselectors[i].replace(REGEX_PSEUDO_CLASSES_EXCEPT_NOT, ''));
         if (nodes.length > 0) {
           for (var j = 0; j < nodes.length; j++) {
-            if (nodes[j] == args.element) {
+            if (nodes[j] === args.element) {
               selectors.push(allselectors[i]);
               break;
             }
@@ -1060,13 +1084,13 @@ export function CSSUtilities() {
     var args = processArguments(arguments, ['selector', 'element']);
 
     //if selector is undefined, null, empty, or not a string, throw the no selector error
-    if (typeof args.selector != TYPE_STRING
-      || args.selector == NULL_VALUE || trim(args.selector) == '') {
+    if (typeof args.selector !== TYPE_STRING
+      || args.selector === NULL_VALUE || trim(args.selector) === '') {
       throw(new Error(errorMessageNoSelector.replace('%method', 'getCSSSelectorSpecificity')));
     }
 
     //if selector is a string containing any commas, throw the multiple selector error
-    else if (args.selector.indexOf(',') != -1) {
+    else if (args.selector.indexOf(',') !== -1) {
       throw(new Error(errorMessageMultipleSelector.replace('%method', 'getCSSSelectorSpecificity')));
     }
 
@@ -1075,7 +1099,7 @@ export function CSSUtilities() {
     //this creates an element reference from an ID
     //and throws an error if the reference is not there, or not an element
     //but the condition allows it to be null if it was originally undefined or null
-    if (args.element != NULL_VALUE) {
+    if (args.element !== NULL_VALUE) {
       args.element = processElementArgument(args.element, 'getCSSSelectorSpecificity');
     }
 
@@ -1098,12 +1122,12 @@ export function CSSUtilities() {
       //we remove pseudo-classes while checking this so that we get those that apply
       //even if only to a different pseudo-state; but because they're not permanently removed
       //we'll still end up with a specificity value that includes any pseudo-class the selector has
-      if (args.element != NULL_VALUE) {
+      if (args.element !== NULL_VALUE) {
         var applies = BOOLEAN_FALSE,
           nodes = getElementsBySelector(args.selector.replace(REGEX_PSEUDO_CLASSES_EXCEPT_NOT, ''));
         if (nodes.length > 0) {
           for (var j = 0; j < nodes.length; j++) {
-            if (nodes[j] == args.element) {
+            if (nodes[j] === args.element) {
               applies = BOOLEAN_TRUE;
               break;
             }
@@ -1111,7 +1135,7 @@ export function CSSUtilities() {
         }
 
         //if the selector doesn't apply
-        if (applies == BOOLEAN_FALSE) {
+        if (applies === BOOLEAN_FALSE) {
           //see if the selector applies to any of the elements ancestors
           //and if it does then return zero specificity
           var node = args.element, ancestors = [node];
@@ -1122,18 +1146,18 @@ export function CSSUtilities() {
           for (var i = 0; i < ancestors.length; i++) {
             if (nodes.length > 0) {
               for (var j = 0; j < nodes.length; j++) {
-                if (nodes[j] == ancestors[i]) {
+                if (nodes[j] === ancestors[i]) {
                   applies = BOOLEAN_TRUE;
                   break;
                 }
               }
             }
-            if (applies == BOOLEAN_TRUE) {
+            if (applies === BOOLEAN_TRUE) {
               break;
             }
           }
 
-          if (applies == BOOLEAN_TRUE) {
+          if (applies === BOOLEAN_TRUE) {
             return [0, 0, 0, 0];
           }
 
@@ -1162,13 +1186,13 @@ export function CSSUtilities() {
     //putting this after the lateinit call ensures that it will
     //only affect asynchronous uses without the internal callback, when the data is not ready
     //it can then be caught by users by testing this method's return value against undefined
-    if (THIS._allready !== BOOLEAN_TRUE && onfinished == NULL_VALUE) {
+    if (THIS._allready !== BOOLEAN_TRUE && onfinished === NULL_VALUE) {
       return;
     }
 
     //or if the ready flag is true and no callback is set
     //just call and return the internal wrapper
-    if (onfinished == NULL_VALUE) {
+    if (onfinished === NULL_VALUE) {
       return wrapper();
     }
 
@@ -1188,9 +1212,9 @@ export function CSSUtilities() {
         //it also never times out; I suppose it could, but it doesn't really
       //matter if it does end up running forever - it's hardly a major overhead!
       else {
-        var readywaiter = window.setInterval(function () {
+        var readywaiter = WINDOW.setInterval(function () {
           if (THIS._allready === BOOLEAN_TRUE) {
-            window.clearInterval(readywaiter);
+            WINDOW.clearInterval(readywaiter);
 
             onfinished(wrapper());
           }
@@ -1243,7 +1267,7 @@ export function CSSUtilities() {
       for (var i = 0; i < stylenodes.length; i++) {
         processStyleNode(
           stylenodes[i],
-          stylenodes[i].nodeType == 7
+          stylenodes[i].nodeType === 7
             ? stylenodes[i].target.toLowerCase()
             : stylenodes[i].nodeName.toLowerCase()
         );
@@ -1280,7 +1304,7 @@ export function CSSUtilities() {
         //if the href is null then this is a style block
         //in which case we already have the text,
         //so just pass the unmodified cssdata back through the oncomplete callback
-        if (cssdata.href == NULL_VALUE) {
+        if (cssdata.href === NULL_VALUE) {
           oncomplete(cssdata);
         }
 
@@ -1291,11 +1315,11 @@ export function CSSUtilities() {
             //if we have an error message, record it to the cssdata object
             //and nullify the stylenode reference
             //then if the error is an http error or "not css", set the media to "none"
-            if (dataobject.message != NULL_VALUE) {
+            if (dataobject.message !== NULL_VALUE) {
               cssdata.message = dataobject.message;
               cssdata.stylenode = NULL_VALUE;
 
-              if (cssdata.message == ERROR_NOT_CSS || /^[1-9]{1,3}/.test(cssdata.message)) {
+              if (cssdata.message === ERROR_NOT_CSS || /^[1-9]{1,3}/.test(cssdata.message)) {
                 cssdata.media = MEDIA_NONE;
               }
             }
@@ -1336,7 +1360,7 @@ export function CSSUtilities() {
 
           //if we've already tested this stylesheet
           //just call the local callback with a standard increment
-          if (THIS._cssdata[cdindex].tested == BOOLEAN_TRUE) {
+          if (THIS._cssdata[cdindex].tested === BOOLEAN_TRUE) {
             localcallback(1);
           }
 
@@ -1420,7 +1444,7 @@ export function CSSUtilities() {
 
         //get the context from the nearest ancestral non-import
         var n = cdcount, parent = THIS._cssdata[n];
-        while (parent.href == cssdata.href) {
+        while (parent.href === cssdata.href) {
           parent = THIS._cssdata[n--];
         }
         context = parent.media;
@@ -1439,11 +1463,11 @@ export function CSSUtilities() {
           //if we have an error message, record it to the cssdata object
           //and nullify the stylenode reference
           //then if the error is an http error or "not css", set the media to "none"
-          if (fdata.message != NULL_VALUE) {
+          if (fdata.message !== NULL_VALUE) {
             cssdata.message = fdata.message;
             cssdata.stylenode = NULL_VALUE;
 
-            if (cssdata.message == ERROR_NOT_CSS || /^[1-9]{1,3}.*$/.test(cssdata.message)) {
+            if (cssdata.message === ERROR_NOT_CSS || /^[1-9]{1,3}.*$/.test(cssdata.message)) {
               cssdata.media = MEDIA_NONE;
             }
           }
@@ -1465,7 +1489,7 @@ export function CSSUtilities() {
         //mark it as a duplicate and don't make a request for it
         //this is particularly important to prevent infinite recursion
         //for example, where two stylesheets import each other
-        if (arrayContains(THIS._cssdata, importobj.href, 'href') != NULL_VALUE) {
+        if (arrayContains(THIS._cssdata, importobj.href, 'href') !== NULL_VALUE) {
           //** how do we disable this duplicate when
           //** we don't have its stylesheet reference?
 
@@ -1503,7 +1527,7 @@ export function CSSUtilities() {
           //which is a _cssdata object that we can check to see if it's already a duplicate
           if (THIS._cssdata[i].href) {
             var arycontains = arrayContains(THIS._stylesheets, THIS._cssdata[i].href, 'href');
-            if (arycontains != NULL_VALUE && arycontains.message != MESSAGE_DUPLICATE) {
+            if (arycontains !== NULL_VALUE && arycontains.message !== MESSAGE_DUPLICATE) {
               //add duplication data to the debug stylesheets array
               THIS._stylesheets.push({
                 'ssid': THIS._cssdata[i].ssid,
@@ -1535,7 +1559,7 @@ export function CSSUtilities() {
           //if this data object has a message property then something went wrong
           //either a security error, or an http error while loading it
           //so just ignore it and continue to the next one
-          if (typeof THIS._cssdata[i].message != TYPE_UNDEFINED) {
+          if (typeof THIS._cssdata[i].message !== TYPE_UNDEFINED) {
             //record an entry to the debug stylesheets array
             THIS._stylesheets.push({
               'ssid': THIS._cssdata[i].ssid,
@@ -1590,14 +1614,14 @@ export function CSSUtilities() {
         }
 
         //call the oncomplete callback, if defined
-        if (typeof oncomplete == TYPE_FUNCTION) {
+        if (typeof oncomplete === TYPE_FUNCTION) {
           oncomplete();
         }
       }
 
       //0. if we have no data in _cssdata, jump straight to the final stage7
       //otherwise pass the first index to stage1 to kick everything off
-      if (THIS._cssdata.length == 0) {
+      if (THIS._cssdata.length === 0) {
         stage7_processStyleSheetsData();
       } else {
         stage1_checkStyleSheetForDataWrapper(0);
@@ -1657,9 +1681,9 @@ export function CSSUtilities() {
     var stylenodes = [];
 
     //begin by looking for xml-stylesheet processing instructions
-    var kids = page.childNodes;
+    var kids = DOCUMENT.childNodes;
     for (var i = 0; i < kids.length; i++) {
-      if (kids[i].nodeType == 7 && kids[i].target.toLowerCase() == 'xml-stylesheet') {
+      if (kids[i].nodeType === 7 && kids[i].target.toLowerCase() === 'xml-stylesheet') {
         stylenodes.push(kids[i]);
       }
     }
@@ -1731,8 +1755,8 @@ export function CSSUtilities() {
       //(which will happen in firefox for an alternate stylesheet that's
       // missing its title attr and hence can never be switched on)
       //otherwise set it according to the style node's disabled state
-      var disnode = node[typeof node.styleSheet != TYPE_UNDEFINED ? 'styleSheet' : 'sheet'],
-        isdisabled = disnode == NULL_VALUE ? BOOLEAN_TRUE : disnode.disabled;
+      var disnode = node[typeof node.styleSheet !== TYPE_UNDEFINED ? 'styleSheet' : 'sheet'],
+        isdisabled = disnode === NULL_VALUE ? BOOLEAN_TRUE : disnode.disabled;
     }
 
     //in opera, the stylesheet returns as disabled if it applies to media
@@ -1786,7 +1810,7 @@ export function CSSUtilities() {
         if (IEXPLORER) {
           //if we have no __css property for this node, record a network error
           //because that would mean we were unable to get the HTML during init
-          if (typeof node.__css == TYPE_UNDEFINED) {
+          if (typeof node.__css === TYPE_UNDEFINED) {
             cssdata.message = ERROR_NETWORK;
           }
 
@@ -1859,7 +1883,7 @@ export function CSSUtilities() {
     //get the media from its media attribute / pseudoattribute,
     //or set to default if it doesn't have one defined
     if (/xml\-stylesheet/.test(owner)) {
-      cssdata.media = typeof pseudoattrs.media != TYPE_UNDEFINED
+      cssdata.media = typeof pseudoattrs.media !== TYPE_UNDEFINED
         ? pseudoattrs.media : MEDIA_ALL;
     } else {
       cssdata.media = node.getAttribute('media')
@@ -1895,7 +1919,7 @@ export function CSSUtilities() {
         //(local or chrome requests, with a status of 0,
         // also return a null or empty content type,
         // so if we don't have one we'll just have to assume it's okay)
-        if ((typeof contype == TYPE_STRING && trim(contype) != '')
+        if ((typeof contype === TYPE_STRING && trim(contype) !== '')
           && !/^(text\/css)/.test(contype)) {
           //if the content type is text/html
           //scan it to see if it is in fact a server error page
@@ -1909,7 +1933,7 @@ export function CSSUtilities() {
           }
 
           //if we haven't got a message, just set the "data is not css" message
-          if (requestdata.message == NULL_VALUE) {
+          if (requestdata.message === NULL_VALUE) {
             requestdata.message = ERROR_NOT_CSS;
           }
         }
@@ -2022,7 +2046,7 @@ export function CSSUtilities() {
     styletext = styletext.replace(/@(charset|namespace)[^;]+;/igm, '');
 
     //if the importsheets flag is defined and true, remove @import statements
-    if (typeof importsheets != TYPE_UNDEFINED && importsheets == BOOLEAN_TRUE) {
+    if (typeof importsheets !== TYPE_UNDEFINED && importsheets === BOOLEAN_TRUE) {
       styletext = styletext.replace(/@import[^;]+;/igm, '');
     }
 
@@ -2040,7 +2064,7 @@ export function CSSUtilities() {
       for (var styletext = '', nomoreimports = NULL_VALUE, i = 0; i < cssdata.length; i++) {
         //don't include any fragments that are pure whitespace
         //because they'll throw our calculations off, beside being useless
-        if (trim(cssdata[i]) == '') {
+        if (trim(cssdata[i]) === '') {
           continue;
         }
 
@@ -2131,7 +2155,7 @@ export function CSSUtilities() {
     //iterate through the text lines
     for (var i = 0; i < cssdata.text.length; i++) {
       //if we have two members this is just a normal rule pair
-      if (cssdata.text[i].length == 2) {
+      if (cssdata.text[i].length === 2) {
         //add this rule data to the cssRules array
         THIS._cssRules.push({
           'selector': cssdata.text[i][0],
@@ -2147,7 +2171,7 @@ export function CSSUtilities() {
         rulecount++;
       }
       //if we have three then the first is an opening @media declaration
-      else if (cssdata.text[i].length == 3) {
+      else if (cssdata.text[i].length === 3) {
         //set the new owner and media
         currentmedia = trim(cssdata.text[i][0].replace('@media', '')).toLowerCase();
         currentowner = '@media';
@@ -2159,7 +2183,7 @@ export function CSSUtilities() {
         //we only need to check as far as the containing style sheet
         //because its media has already been contextualized
         var context = cssdata.media;
-        if (context == '') {
+        if (context === '') {
           context = MEDIA_ALL;
         }
         currentmedia = contextualizeMediaTypes(context, currentmedia);
@@ -2181,7 +2205,7 @@ export function CSSUtilities() {
         //if we have one then it's closing an @media declaration
         //or it's an empty member after a stylesheets' final closing brace
       //either way, the context should now be the parent stylesheet
-      else if (cssdata.text[i].length == 1) {
+      else if (cssdata.text[i].length === 1) {
         currentmedia = cssdata.media;
         currentxmedia = cssdata.xmedia;
 
@@ -2200,7 +2224,7 @@ export function CSSUtilities() {
   function createBrowserRulesData(oncomplete) {
     //get the collection of stylesheets from the specified context document
     //and convert it to an array so that we can splice it if necessary
-    var stylesheets = arrayifize(page.styleSheets);
+    var stylesheets = arrayifize(DOCUMENT.styleSheets);
 
     //iterate through the collection and parse each stylesheet
     for (var i = 0; i < stylesheets.length; i++) {
@@ -2209,7 +2233,7 @@ export function CSSUtilities() {
 
       //if the stylesheets has an ownerNode property then this is a standard implementation
       //which we can parse using DOM 2 CSS properties and collections
-      if (typeof stylesheets[i].ownerNode != TYPE_UNDEFINED) {
+      if (typeof stylesheets[i].ownerNode !== TYPE_UNDEFINED) {
         //if this is safari 3 we cannot process xml-stylesheet,
         //because it doesn't support the pseudo-attributes we need
         if (SAFARI3 && /xml\-stylesheet/.test(stylesheets[i].ownerNode.nodeName)) {
@@ -2280,12 +2304,12 @@ export function CSSUtilities() {
         //which is annoying and ugly and pisses me off
         //it's bad enough that it does that for HTML tag names,
       //but at least it has the excuse of that being the canonical form
-      else if (typeof stylesheets[i].owningElement != TYPE_UNDEFINED) {
+      else if (typeof stylesheets[i].owningElement !== TYPE_UNDEFINED) {
         parseIEStyleSheet(
           stylesheets[i],
           stylesheets[i].owningElement.nodeName.toLowerCase(),
           //the trim probably isn't necessary, but better safe than sorry!
-          trim(stylesheets[i].media) != '' ? trim(stylesheets[i].media) : MEDIA_ALL
+          trim(stylesheets[i].media) !== '' ? trim(stylesheets[i].media) : MEDIA_ALL
         );
       }
     }
@@ -2303,12 +2327,12 @@ export function CSSUtilities() {
     // delete THIS.ssidcounter;
 
     //if the watch setting is true, watch for changes in disabled state
-    if (watch == BOOLEAN_TRUE) {
+    if (watch === BOOLEAN_TRUE) {
       watchStyleSheets();
     }
 
     //call the oncomplete callback, if defined
-    if (typeof oncomplete == TYPE_FUNCTION) {
+    if (typeof oncomplete === TYPE_FUNCTION) {
       oncomplete();
     }
   }
@@ -2320,9 +2344,9 @@ export function CSSUtilities() {
     //and will only be caused by duplicate stylesheet includes
     //we also have to check that the href is not the same as base
     //which can happen in firefox 2 for <style> elements, rather than href being null
-    if (sheet.href && sheet.href != base) {
+    if (sheet.href && sheet.href !== base) {
       var testhref = qualifyHREF(sheet.href, base);
-      if (arrayContains(THIS._stylesheets, testhref, 'href') != NULL_VALUE) {
+      if (arrayContains(THIS._stylesheets, testhref, 'href') !== NULL_VALUE) {
         //add duplication data to the debug stylesheets array
         THIS._stylesheets.push({
           'ssid': sheet.__ssid,
@@ -2375,13 +2399,13 @@ export function CSSUtilities() {
       if (!isdisabled) {
         //count the number of ordinary rules
         for (var rules = sheet.cssRules, rulecount = 0, i = 0; i < rules.length; i++) {
-          if (rules.item(i).type == 1) {
+          if (rules.item(i).type === 1) {
             rulecount++;
-          } else if (rules.item(i).type == 4) {
+          } else if (rules.item(i).type === 4) {
             for (var subrules = rules.item(i).cssRules, j = 0; j < subrules.length; j++) {
               //no need to recur further than this,
               //because nested @media are not allowed
-              if (subrules.item(j).type == 1) {
+              if (subrules.item(j).type === 1) {
                 rulecount++;
               }
             }
@@ -2405,7 +2429,7 @@ export function CSSUtilities() {
       //rather than href being null (which is what we want to record)
       THIS._stylesheets.push({
         'ssid': sheet.__ssid,
-        'href': (sheet.href && sheet.href != base)
+        'href': (sheet.href && sheet.href !== base)
           ? qualifyHREF(sheet.href, base)
           : NULL_VALUE,
         'owner': owner,
@@ -2430,7 +2454,7 @@ export function CSSUtilities() {
       //rather than href being null (which is what we want to record)
       THIS._stylesheets.push({
         'ssid': sheet.__ssid,
-        'href': (sheet.href && sheet.href != base)
+        'href': (sheet.href && sheet.href !== base)
           ? qualifyHREF(sheet.href, base)
           : NULL_VALUE,
         'owner': owner,
@@ -2461,12 +2485,12 @@ export function CSSUtilities() {
       rule = rules.item(i);
 
       //if it's an @import
-      if (rule.type == 3) {
+      if (rule.type === 3) {
         //get the media from the rule itself
         //or if that's empty get it from the stylesheet's parent stylesheet
         //or if that's empty set it to default
         media = rule.media.mediaText;
-        if (media == '') {
+        if (media === '') {
           //this exception handling is for safari, where if the parent
           //stylesheet is an @import then it doesn't have a media object
           //the media object belongs to its ownerRule object instead
@@ -2476,7 +2500,7 @@ export function CSSUtilities() {
             media = rule.parentStyleSheet.ownerRule.media.mediaText;
           }
         }
-        if (media == '') {
+        if (media === '') {
           media = MEDIA_ALL;
         }
 
@@ -2496,7 +2520,7 @@ export function CSSUtilities() {
             context = parent.ownerRule.media.mediaText;
           }
 
-          if (context == '') {
+          if (context === '') {
             context = MEDIA_ALL;
           }
           media = contextualizeMediaTypes(context, media);
@@ -2524,7 +2548,7 @@ export function CSSUtilities() {
       var rule = rules.item(i);
 
       //if this is a regular style rule
-      if (rule.type == 1) {
+      if (rule.type === 1) {
         //if owner is "link", "style" or "xml-stylesheet" then this is a normal rule
         //(as opposed to being inside a @media or @import for which media was passed in as an argument)
         //so get the media from the rule's parent stylesheet
@@ -2534,7 +2558,7 @@ export function CSSUtilities() {
         //because safari returns null for rule.parentRule
         if (/^(xml\-stylesheet|link|(([a-z]+:)?style))$/i.test(owner)) {
           media = rule.parentStyleSheet.media.mediaText;
-          if (media == '') {
+          if (media === '') {
             media = MEDIA_ALL;
           }
 
@@ -2572,7 +2596,7 @@ export function CSSUtilities() {
           //and hence the value we're splitting doesn't contain a colon at all
           //so if that happens we'll just have to remove it and continue
           //it would happen sooner or later anyway for such a rule, so it's no ultimate loss
-          if (styletext[c].length == 1) {
+          if (styletext[c].length === 1) {
             styletext.splice(c, 1);
             c--;
             continue;
@@ -2583,7 +2607,7 @@ export function CSSUtilities() {
           //(we need to check for an end-substring so that we don't get confused
           //	by a content property with "!important" in its text
           // (which is possible, however improbable!))
-          if (rule.style.getPropertyPriority(trim(styletext[c][0])) == 'important'
+          if (rule.style.getPropertyPriority(trim(styletext[c][0])) === 'important'
             && !IMPORTANT_RULE.test(styletext[c][1])) {
             styletext[c][1] += ' !important';
           }
@@ -2602,7 +2626,7 @@ export function CSSUtilities() {
           'css': styletext,
           'media': media,
           'owner': owner,
-          'href': sheet.href == NULL_VALUE ? NULL_VALUE : qualifyHREF(sheet.href, base),
+          'href': sheet.href === NULL_VALUE ? NULL_VALUE : qualifyHREF(sheet.href, base),
           'ssid': sheet.__ssid
         });
       }
@@ -2614,7 +2638,7 @@ export function CSSUtilities() {
       rule = rules.item(i);
 
       //if it's an @media
-      if (rule.type == 4) {
+      if (rule.type === 4) {
         //get the media from the rule itself
         //or if that empty get it from the parent stylesheet
         //		which is possible - Firefox and IE support "@media { ... }"
@@ -2622,10 +2646,10 @@ export function CSSUtilities() {
         //		such rules, not including them in the cssRules collection at all
         //or if that's empty set it to default
         media = rule.media.mediaText;
-        if (media == '') {
+        if (media === '') {
           media = rule.parentStyleSheet.media.mediaText;
         }
-        if (media == '') {
+        if (media === '') {
           media = MEDIA_ALL;
         }
 
@@ -2645,7 +2669,7 @@ export function CSSUtilities() {
             context = parent.ownerRule.media.mediaText;
           }
 
-          if (context == '') {
+          if (context === '') {
             context = MEDIA_ALL;
           }
           media = contextualizeMediaTypes(context, media);
@@ -2679,7 +2703,7 @@ export function CSSUtilities() {
     //for example, where two stylesheets import each other
     if (sheet.href) {
       var testhref = qualifyHREF(sheet.href, base);
-      if (arrayContains(THIS._stylesheets, testhref, 'href') != NULL_VALUE) {
+      if (arrayContains(THIS._stylesheets, testhref, 'href') !== NULL_VALUE) {
         //add duplication data to the debug stylesheets array
         THIS._stylesheets.push({
           'ssid': sheet.__ssid,
@@ -2725,14 +2749,14 @@ export function CSSUtilities() {
         //so we have to check for this by testing the
         //length of the import's rules collection
         //and if its zero just don't include the stylesheet
-        if (sheet.imports[i].rules.length == 0) {
+        if (sheet.imports[i].rules.length === 0) {
           continue;
         }
 
         //get the media from the owner stylesheet
         //or if that's empty set it to default
         media = trim(sheet.media);
-        if (media == '') {
+        if (media === '') {
           media = MEDIA_ALL;
         }
 
@@ -2828,8 +2852,8 @@ export function CSSUtilities() {
         //unless it's null or empty, in which case its null
         //nb. we only really need to test empty,
         //but I feel safer testing null as well
-        if (typeof href == TYPE_UNDEFINED) {
-          href = (sheet.href == NULL_VALUE || sheet.href == '')
+        if (typeof href === TYPE_UNDEFINED) {
+          href = (sheet.href === NULL_VALUE || sheet.href === '')
             ? NULL_VALUE
             : qualifyHREF(sheet.href, base);
         }
@@ -2841,7 +2865,7 @@ export function CSSUtilities() {
         //beginning with the default media value from the stylesheet
         //if the value is empty then set it to default
         var currentmedia = sheet.media;
-        if (currentmedia == '') {
+        if (currentmedia === '') {
           currentmedia = MEDIA_ALL;
         }
 
@@ -2851,7 +2875,7 @@ export function CSSUtilities() {
         //iterate through the text lines
         for (var i = 0; i < styletext.length; i++) {
           //if we have two members this is just a normal rule pair
-          if (styletext[i].length == 2) {
+          if (styletext[i].length === 2) {
             rules.push({
               'selector': styletext[i][0],
               'css': styletext[i][1],
@@ -2863,13 +2887,13 @@ export function CSSUtilities() {
           }
             //if we have three then the first is an opening @media declaration
           //which we can edit to get the actual media value
-          else if (styletext[i].length == 3) {
+          else if (styletext[i].length === 3) {
             currentmedia = trim(styletext[i][0].replace('@media', '')).toLowerCase();
             currentowner = '@media';
 
             //adjust the media type if necessary to take account of the context
             var context = sheet.media;
-            if (context == '') {
+            if (context === '') {
               context = MEDIA_ALL;
             }
             currentmedia = contextualizeMediaTypes(context, currentmedia);
@@ -2884,9 +2908,9 @@ export function CSSUtilities() {
             });
           }
           //if we have one then it's closing an @media declaration
-          else if (styletext[i].length == 1) {
+          else if (styletext[i].length === 1) {
             currentmedia = sheet.media;
-            if (currentmedia == '') {
+            if (currentmedia === '') {
               currentmedia = MEDIA_ALL;
             }
 
@@ -2959,9 +2983,9 @@ export function CSSUtilities() {
       //if the selector is empty, unknown, or contains an unknown pseudo-node,
       //just ignore it and continue on to the next rule
       //(IE has a cutely-obvious way of indicating unknown syntax in css :))
-      if (rules[i].selector == ''
-        || rules[i].selector == 'UNKNOWN'
-        || rules[i].selector.indexOf(':unknown') != -1) {
+      if (rules[i].selector === ''
+        || rules[i].selector === 'UNKNOWN'
+        || rules[i].selector.indexOf(':unknown') !== -1) {
         continue;
       }
 
@@ -2988,10 +3012,15 @@ export function CSSUtilities() {
 
   //-- other private css-related methods --/
 
+  var allCounter = 0, cachedCounter = 0;
   //getCSSRules return all the rule objects that apply to an element
   //each of these is a custom object compiled with the most useful information
   //rather than actually being a cssRule object, so that the results are consistent cross browser
   function getCSSRules(element, media, accept, altstates, rules, inherited, ancestors) {
+    // if (parsedCssRules.has(element)) {
+    //   return parsedCssRules.get(element);
+    // }
+
     //no processing of the first two arguments happens here
     //we require them to have been pre-processed before calling this
 
@@ -3002,12 +3031,12 @@ export function CSSUtilities() {
     accept = processAcceptArgument(accept);
 
     //if rules is undefined or null, define a new array
-    if (typeof rules == TYPE_UNDEFINED || rules == NULL_VALUE) {
+    if (typeof rules === TYPE_UNDEFINED || rules === NULL_VALUE) {
       rules = [];
     }
 
     //if inherited is undefined or null, set it to false
-    if (typeof inherited == TYPE_UNDEFINED || inherited == NULL_VALUE) {
+    if (typeof inherited === TYPE_UNDEFINED || inherited === NULL_VALUE) {
       inherited = BOOLEAN_FALSE;
     }
 
@@ -3015,7 +3044,7 @@ export function CSSUtilities() {
     //we'll maintain an array of all the elements we check
     //which we'll need when it comes to determine the selector specificity
     //so that we can reject those that don't apply
-    if (typeof ancestors == TYPE_UNDEFINED || ancestors == NULL_VALUE) {
+    if (typeof ancestors === TYPE_UNDEFINED || ancestors === NULL_VALUE) {
       ancestors = [element];
 
       //if the element has a style attribute, and the "attributes" setting is true,
@@ -3028,9 +3057,9 @@ export function CSSUtilities() {
       //the element has no style attribute; if that happens, or if the
       //style attribute is empty, the create method will return null
       //so we save the return value and test it before adding it to the array
-      if (attributes == BOOLEAN_TRUE && element.getAttribute('style')) {
+      if (attributes === BOOLEAN_TRUE && element.getAttribute('style')) {
         var stylerule = createStyleAttributeRule(element);
-        if (stylerule != NULL_VALUE) {
+        if (stylerule !== NULL_VALUE) {
           THIS._cssRules.push(stylerule);
         }
       }
@@ -3043,10 +3072,10 @@ export function CSSUtilities() {
     //now iterate through all the stored cssRules
     for (var i = 0; i < THIS._cssRules.length; i++) {
       //if the rule doesn't match the input media criteria, we don't want it
-      if (!mediaMatches(media, THIS._cssRules[i])) {
+      if (!WINDOW.matchMedia(THIS._cssRules[i].rule)) {
         continue;
       }
-
+      // console.time('getElementsBySelector');
       //if this is a temporary style attribute rule
       //and the element argument is the original input element reference
       //create a nodes array containing just the input element
@@ -3054,9 +3083,10 @@ export function CSSUtilities() {
       //and set the altstate variable for it to false
       //because style attributes apply to all states
       //this will make sure that its properties are correctly sorted
-      if (THIS._cssRules[i].owner == '@style' && element == ancestors[0]) {
-        var nodes = [element],
-          altstate = BOOLEAN_FALSE;
+
+      var recheckNode = false;
+      if (THIS._cssRules[i].owner === '@style' && element === ancestors[0]) {
+        var altstate = BOOLEAN_FALSE;
       }
 
       //otherwise, see if this selector matches any elements
@@ -3064,13 +3094,12 @@ export function CSSUtilities() {
         //if the altstates argument is true, do a pre-search for this element
         //with the original selector, not edited for pseudo-classes
         //so we can compare to know whether it matched without editing, or only with editing
-        if (altstates == BOOLEAN_TRUE) {
-          for (var altstate = BOOLEAN_TRUE,
-                 allnodes = getElementsBySelector(THIS._cssRules[i].selector),
-                 j = 0; j < allnodes.length; j++) {
-            if (allnodes[j] == element) {
+        if (altstates === BOOLEAN_TRUE) {
+          var altstate = BOOLEAN_TRUE;
+
+          if (THIS._cssRules[i].selector) {
+            if (element.matches(THIS._cssRules[i].selector)) {
               altstate = BOOLEAN_FALSE;
-              break;
             }
           }
         }
@@ -3082,193 +3111,193 @@ export function CSSUtilities() {
         //now do the real search, and if the altstates argument is true,
         //remove pseudo-classes except not() from the test selector;
         //otherwise pass it in unedited
-        nodes = getElementsBySelector(
-          altstates == BOOLEAN_TRUE
-            ? THIS._cssRules[i].selector.replace(REGEX_PSEUDO_CLASSES_EXCEPT_NOT, '')
-            : THIS._cssRules[i].selector
+
+        recheckNode = altstates === BOOLEAN_TRUE
+          ? THIS._cssRules[i].selector.replace(REGEX_PSEUDO_CLASSES_EXCEPT_NOT, '')
+          : THIS._cssRules[i].selector;
+      }
+
+      try {
+        if (false === recheckNode || element.matches(santizeSelector(recheckNode))) {
+          //create an inheritance path array, which must be a copy not a reference
+          //otherwise when we come to copy it into the output,
+          //it will be the same (its final state) every time
+          //we'll also do it in reverse so that
+          //we get an array that's in top-down DOM order
+          var inheritance = [];
+          if (inherited) {
+            for (var a = ancestors.length - 1; a > 0; a--) {
+              inheritance.push(ancestors[a]);
+            }
+          }
+
+          //create a rule object to add to the array, starting with
+          //the selectors, css, index in the rule array,
+          //or altstates is true and the selector only applies to an altstate
+          //a placeholder for its specificity (which we'll work out
+          //once we've got all the rules), its current inheritance path
+          //and a flag to indicate whether it actually applies to the element in its current state
+          //all of which we need irrespective of whether they're included
+          //in the accept dictionary; so for any that are not,
+          //we'll delete them at the end once all the other processing is done
+          var ruleobj = {
+            'selector': THIS._cssRules[i].selector,
+            'css': THIS._cssRules[i].css,
+            'index': i,
+            'specificity': [0, 0, 0, 0],
+            'inheritance': inheritance,
+            'altstate': altstate
+          };
+
+          //then add the properties which are optional and only included
+          //if they're listed in the accept dictionary, or it's "*";
+          //apart from "properties" which we deal with later
+          for (var optionalprops = ['media', 'xmedia', 'owner', 'ssid', 'href'],
+                 k = 0; k < optionalprops.length; k++) {
+            if (accept === '*' || typeof accept[optionalprops[k]] !== TYPE_UNDEFINED) {
+              //we need this condition because the "xmedia"
+              //property is only available in author mode
+              if (typeof THIS._cssRules[i][optionalprops[k]] !== TYPE_UNDEFINED) {
+                ruleobj[optionalprops[k]] = THIS._cssRules[i][optionalprops[k]];
+              }
+            }
+          }
+
+          //add this rule object to the rules array
+          rules.push(ruleobj);
+
+          //we'll only find it once!
+        }
+      } catch (e) {
+      }
+      // console.timeEnd('getElementsBySelector');
+    }
+
+    //first we have to sort it so it's in primary order of specificity
+    //with a secondary order by source index, and a tertiary order by inheritance chain depth
+    //so begin by iterating through the rules to get their specificities
+    for (var i = 0; i < rules.length; i++) {
+      //extract the selector from this rule and split into individuals
+      var selectors = rules[i].selector.split(',');
+
+      //now we need to pass each selector to the getSelectorSpecificity method
+      //(unless it's inherited in which case it has zero specificity)
+      //so we get an array of all the specificities that apply to the overall selector
+      for (var specs = [], j = 0; j < selectors.length; j++) {
+        specs.push(
+          rules[i].inheritance.length > 0
+            ? [0, 0, 0, 0]
+            : getSelectorSpecificity(selectors[j])
         );
       }
 
-      //if we have matches, search them looking for the input element reference
-      if (nodes.length > 0) {
-        for (var j = 0; j < nodes.length; j++) {
-          //and if we find it add the specified rule to the rules array
-          if (nodes[j] == element) {
-            //create an inheritance path array, which must be a copy not a reference
-            //otherwise when we come to copy it into the output,
-            //it will be the same (its final state) every time
-            //we'll also do it in reverse so that
-            //we get an array that's in top-down DOM order
-            var inheritance = [];
-            if (inherited) {
-              for (var a = ancestors.length - 1; a > 0; a--) {
-                inheritance.push(ancestors[a]);
-              }
-            }
+      //now inverse sort the resulting array, so that the largest is first
+      specs.sort(function (a, b) {
+        if (a[0] !== b[0]) {
+          return b[0] - a[0];
+        }
+        if (a[1] !== b[1]) {
+          return b[1] - a[1];
+        }
+        if (a[2] !== b[2]) {
+          return b[2] - a[2];
+        }
+        return b[3] - a[3];
+      });
 
-            //create a rule object to add to the array, starting with
-            //the selectors, css, index in the rule array,
-            //or altstates is true and the selector only applies to an altstate
-            //a placeholder for its specificity (which we'll work out
-            //once we've got all the rules), its current inheritance path
-            //and a flag to indicate whether it actually applies to the element in its current state
-            //all of which we need irrespective of whether they're included
-            //in the accept dictionary; so for any that are not,
-            //we'll delete them at the end once all the other processing is done
-            var ruleobj = {
-              'selector': THIS._cssRules[i].selector,
-              'css': THIS._cssRules[i].css,
-              'index': i,
-              'specificity': [0, 0, 0, 0],
-              'inheritance': inheritance,
-              'altstate': altstate
-            };
+      //then save the highest value, because obviously that's the one
+      //that determines the specificity of the rule's properties to this element
+      rules[i].specificity = specs[0];
+    }
 
-            //then add the properties which are optional and only included
-            //if they're listed in the accept dictionary, or it's "*";
-            //apart from "properties" which we deal with later
-            for (var optionalprops = ['media', 'xmedia', 'owner', 'ssid', 'href'],
-                   k = 0; k < optionalprops.length; k++) {
-              if (accept == '*' || typeof accept[optionalprops[k]] != TYPE_UNDEFINED) {
-                //we need this condition because the "xmedia"
-                //property is only available in author mode
-                if (typeof THIS._cssRules[i][optionalprops[k]] != TYPE_UNDEFINED) {
-                  ruleobj[optionalprops[k]] = THIS._cssRules[i][optionalprops[k]];
-                }
-              }
-            }
+    //now we have the specificity data we can sort the rules array by it
+    rules.sort(function (a, b) {
+      //if the specificity values are the same
+      if (a.specificity.toString() === b.specificity.toString()) {
+        //if the source index values are also the same,
+        //sort on inverse inheritance depth
+        //so that the highest elements come before the deepest elements
+        if (a.index === b.index) {
+          return b.inheritance.length - a.inheritance.length;
+        }
 
-            //add this rule object to the rules array
-            rules.push(ruleobj);
+        //otherwise sort on source index
+        return a.index - b.index;
+      }
 
-            //we'll only find it once!
-            break;
+      //otherwise sort on specificity
+      if (a.specificity[0] !== b.specificity[0]) {
+        return a.specificity[0] - b.specificity[0];
+      }
+      if (a.specificity[1] !== b.specificity[1]) {
+        return a.specificity[1] - b.specificity[1];
+      }
+      if (a.specificity[2] !== b.specificity[2]) {
+        return a.specificity[2] - b.specificity[2];
+      }
+      return a.specificity[3] - b.specificity[3];
+    });
+
+    //if "properties" is included in the accept dictionary, or its "*"
+    //we need to add and then sort the individual properties for the rules
+    //"sort" in this case means to organise the data so that each member
+    //is a further object with value and status properties, rather than just a value
+    //ie. each has the form {"color":{"value":"red","status":"active"} rather than just {"color":"red"}
+    //and the "status" value can be "active", "cancelled" or "inactive" (for altstate rules)
+    //this replaces what used to be separate properties,xproperties,nproperties objects
+    //the second argument instructs the method to do that sort,
+    //which if it's false will only return an unsorted properties object,
+    //which setting is used by the getCSSStyleSheetRules method
+    if (accept === "*" || typeof accept.properties !== TYPE_UNDEFINED) {
+      rules = addSortedProperties(rules, BOOLEAN_TRUE);
+    }
+
+    //if accept is not "*", then for each of the options
+    //"selector","css","index","specificity", "inheritance" and "altstate",
+    //if the accept dictionary didn't include it, delete it from each rule object
+    //first nullifying it to ensure garbage collection in IE
+    if (accept !== "*") {
+      for (var i = 0; i < rules.length; i++) {
+        for (var props = ['selector', 'css', 'index', 'specificity', 'inheritance', 'altstate'],
+               j = 0; j < props.length; j++) {
+          if (typeof accept[props[j]] === TYPE_UNDEFINED) {
+            rules[i][props[j]] = undefined;
+            // rules[i][props[j]] = NULL_VALUE;
+            // delete rules[i][props[j]];
           }
         }
       }
+    }
+
+    //if we added a temporary rule object
+    //for the element's style attribute, remove it again
+    if (THIS._cssRules[THIS._cssRules.length - 1] && THIS._cssRules[THIS._cssRules.length - 1].owner === '@style') {
+      THIS._cssRules.splice(THIS._cssRules.length - 1, 1);
     }
 
     //if this element has a parent element, recur on that
     //so that we get inherited rules as well
-    if (element.parentNode && element.parentNode.nodeType == 1) {
-      return getCSSRules(element.parentNode, media, accept, altstates, rules, BOOLEAN_TRUE, ancestors);
+    if (element.parentNode && element.parentNode.nodeType === 1) {
+      if (parsedCssRules.has(element.parentNode)) {
+        let parentRules = parsedCssRules.get(element.parentNode).filter((rule) => {
+          try {
+            return element.matches(rule.selector);
+          } catch (e) {
+            return true;
+          }
+        })
+
+        rules.unshift(...parentRules);
+      }
     }
 
-    //otherwise we can proceed to process the finished rules array
-    else {
-      //if we have no rules we can just return the empty array and we're done
-      //as well as saving some process, this also means that we can save adding
-      //a condition to the bit at the bottom which removes any added @style rule
-      //which we'd otherwise have to check against (THIS._cssRules.length > 0)
-      if (rules.length == 0) {
-        return rules;
-      }
+    // if (element.parentNode && element.parentNode.nodeType === 1) {
+    //   return getCSSRules(element.parentNode, media, accept, altstates, rules, BOOLEAN_TRUE, ancestors);
+    // }
 
-      //first we have to sort it so it's in primary order of specificity
-      //with a secondary order by source index, and a tertiary order by inheritance chain depth
-      //so begin by iterating through the rules to get their specificities
-      for (var i = 0; i < rules.length; i++) {
-        //extract the selector from this rule and split into individuals
-        var selectors = rules[i].selector.split(',');
-
-        //now we need to pass each selector to the getSelectorSpecificity method
-        //(unless it's inherited in which case it has zero specificity)
-        //so we get an array of all the specificities that apply to the overall selector
-        for (var specs = [], j = 0; j < selectors.length; j++) {
-          specs.push(
-            rules[i].inheritance.length > 0
-              ? [0, 0, 0, 0]
-              : getSelectorSpecificity(selectors[j])
-          );
-        }
-
-        //now inverse sort the resulting array, so that the largest is first
-        specs.sort(function (a, b) {
-          if (a[0] !== b[0]) {
-            return b[0] - a[0];
-          }
-          if (a[1] !== b[1]) {
-            return b[1] - a[1];
-          }
-          if (a[2] !== b[2]) {
-            return b[2] - a[2];
-          }
-          return b[3] - a[3];
-        });
-
-        //then save the highest value, because obviously that's the one
-        //that determines the specificity of the rule's properties to this element
-        rules[i].specificity = specs[0];
-      }
-
-      //now we have the specificity data we can sort the rules array by it
-      rules.sort(function (a, b) {
-        //if the specificity values are the same
-        if (a.specificity.toString() === b.specificity.toString()) {
-          //if the source index values are also the same,
-          //sort on inverse inheritance depth
-          //so that the highest elements come before the deepest elements
-          if (a.index === b.index) {
-            return b.inheritance.length - a.inheritance.length;
-          }
-
-          //otherwise sort on source index
-          return a.index - b.index;
-        }
-
-        //otherwise sort on specificity
-        if (a.specificity[0] !== b.specificity[0]) {
-          return a.specificity[0] - b.specificity[0];
-        }
-        if (a.specificity[1] !== b.specificity[1]) {
-          return a.specificity[1] - b.specificity[1];
-        }
-        if (a.specificity[2] !== b.specificity[2]) {
-          return a.specificity[2] - b.specificity[2];
-        }
-        return a.specificity[3] - b.specificity[3];
-      });
-
-      //if "properties" is included in the accept dictionary, or its "*"
-      //we need to add and then sort the individual properties for the rules
-      //"sort" in this case means to organise the data so that each member
-      //is a further object with value and status properties, rather than just a value
-      //ie. each has the form {"color":{"value":"red","status":"active"} rather than just {"color":"red"}
-      //and the "status" value can be "active", "cancelled" or "inactive" (for altstate rules)
-      //this replaces what used to be separate properties,xproperties,nproperties objects
-      //the second argument instructs the method to do that sort,
-      //which if it's false will only return an unsorted properties object,
-      //which setting is used by the getCSSStyleSheetRules method
-      if (accept === "*" || typeof accept.properties != TYPE_UNDEFINED) {
-        rules = addSortedProperties(rules, BOOLEAN_TRUE);
-      }
-
-      //if accept is not "*", then for each of the options
-      //"selector","css","index","specificity", "inheritance" and "altstate",
-      //if the accept dictionary didn't include it, delete it from each rule object
-      //first nullifying it to ensure garbage collection in IE
-      if (accept !== "*") {
-        for (var i = 0; i < rules.length; i++) {
-          for (var props = ['selector', 'css', 'index', 'specificity', 'inheritance', 'altstate'],
-                 j = 0; j < props.length; j++) {
-            if (typeof accept[props[j]] == TYPE_UNDEFINED) {
-              rules[i][props[j]] = undefined;
-              // rules[i][props[j]] = NULL_VALUE;
-              // delete rules[i][props[j]];
-            }
-          }
-        }
-      }
-
-      //if we added a temporary rule object
-      //for the element's style attribute, remove it again
-      if (THIS._cssRules[THIS._cssRules.length - 1].owner == '@style') {
-        THIS._cssRules.splice(THIS._cssRules.length - 1, 1);
-      }
-
-      //and return the final rules array
-      return rules;
-    }
+    //and return the final rules array
+    parsedCssRules.set(element, rules);
+    return rules;
   }
 
   //create a rule object for the cssRules array
@@ -3309,7 +3338,7 @@ export function CSSUtilities() {
     }
 
     //if the styletext is empty, return null
-    if (styletext == '') {
+    if (styletext === '') {
       return NULL_VALUE;
     }
 
@@ -3334,7 +3363,7 @@ export function CSSUtilities() {
       };
 
     //add xmedia only in author mode
-    if (mode == MODE_AUTHOR) {
+    if (mode === MODE_AUTHOR) {
       ruleobj.xmedia = ruleobj.media;
     }
 
@@ -3354,7 +3383,7 @@ export function CSSUtilities() {
       rules[i].properties = parsePropertyText(
         rules[i].css,
         {},
-        (typeof rules[i].inheritance != TYPE_UNDEFINED
+        (typeof rules[i].inheritance !== TYPE_UNDEFINED
           && rules[i].inheritance.length > 0)
       );
 
@@ -3373,7 +3402,7 @@ export function CSSUtilities() {
       if (dosort) {
         //if the altstate flag for this rule is true
         //change all the status flags to "inactive"
-        if (rules[i].altstate == BOOLEAN_TRUE) {
+        if (rules[i].altstate === BOOLEAN_TRUE) {
           for (var ip in rules[i].allproperties) {
             if (!rules[i].allproperties.hasOwnProperty(ip)) {
               continue;
@@ -3390,14 +3419,14 @@ export function CSSUtilities() {
             //for each of the properties in the earlier object
             for (var jp in rules[j].allproperties) {
               if (!rules[j].allproperties.hasOwnProperty(jp)
-                || rules[j].allproperties[jp].status != STATUS_ACTIVE) {
+                || rules[j].allproperties[jp].status !== STATUS_ACTIVE) {
                 continue;
               }
 
               //for each of the properties in this object
               for (var ip in rules[i].allproperties) {
                 if (!rules[i].allproperties.hasOwnProperty(ip)
-                  || rules[i].allproperties[ip].status != STATUS_ACTIVE) {
+                  || rules[i].allproperties[ip].status !== STATUS_ACTIVE) {
                   continue;
                 }
 
@@ -3409,7 +3438,7 @@ export function CSSUtilities() {
                 //but we don't need to do that additional testing
                 //because only non-inherited properties will be included
                 //in the output of inherited rules
-                if (jp == ip) {
+                if (jp === ip) {
                   rules[j].allproperties[jp].status = STATUS_CANCELLED;
 
                   //there will only be one
@@ -3438,7 +3467,7 @@ export function CSSUtilities() {
         //	by a content property with "!important" in its text),
         for (var j in rules[i].allproperties) {
           if (!rules[i].allproperties.hasOwnProperty(j)
-            || rules[i].allproperties[j].status != STATUS_CANCELLED) {
+            || rules[i].allproperties[j].status !== STATUS_CANCELLED) {
             continue;
           }
 
@@ -3451,8 +3480,8 @@ export function CSSUtilities() {
             //to look for later properties with the same name,
             for (var x = i + 1; x < rules.length; x++) {
               //and if we find a cancelled one that also has !important
-              if (typeof rules[x].allproperties[j] != TYPE_UNDEFINED
-                && rules[x].allproperties[j].status == STATUS_CANCELLED
+              if (typeof rules[x].allproperties[j] !== TYPE_UNDEFINED
+                && rules[x].allproperties[j].status === STATUS_CANCELLED
                 && IMPORTANT_RULE.test(rules[x].allproperties[j].value)) {
                 //then it will over-take precedence
                 precedence = x;
@@ -3463,14 +3492,14 @@ export function CSSUtilities() {
             for (var x = i; x < rules.length; x++) {
               //and once we've found the property with precedence,
               //change its status back to "active"
-              if (x == precedence) {
+              if (x === precedence) {
                 rules[x].allproperties[j].status = STATUS_ACTIVE;
 
                 //and any earlier active instances of that property to which we did the same thing
                 //then need their status changed back from "active" to "cancelled"
                 for (var y = 0; y < x; y++) {
-                  if (typeof rules[y].allproperties[j] != TYPE_UNDEFINED
-                    && rules[y].allproperties[j].status == STATUS_ACTIVE) {
+                  if (typeof rules[y].allproperties[j] !== TYPE_UNDEFINED
+                    && rules[y].allproperties[j].status === STATUS_ACTIVE) {
                     rules[y].allproperties[j].status = STATUS_CANCELLED;
                   }
                 }
@@ -3479,8 +3508,8 @@ export function CSSUtilities() {
                 //and for any other instance of that property that's already "active"
               //update its status to "cancelled"
               else {
-                if (typeof rules[x].allproperties[j] != TYPE_UNDEFINED
-                  && rules[x].allproperties[j].status == STATUS_ACTIVE) {
+                if (typeof rules[x].allproperties[j] !== TYPE_UNDEFINED
+                  && rules[x].allproperties[j].status === STATUS_ACTIVE) {
                   rules[x].allproperties[j].status = STATUS_CANCELLED;
 
                   //there will only be one
@@ -3505,13 +3534,13 @@ export function CSSUtilities() {
         //for each active value in the properties object
         for (var j in rules[i].allproperties) {
           if (!rules[i].allproperties.hasOwnProperty(j)
-            || rules[i].allproperties[j].status != STATUS_ACTIVE) {
+            || rules[i].allproperties[j].status !== STATUS_ACTIVE) {
             continue;
           }
 
           //if this is a shorthand property definition
           //which we know simply by whether we have a longhands list for it
-          if (typeof LONGHAND_PROPERTIES[j] != TYPE_UNDEFINED) {
+          if (typeof LONGHAND_PROPERTIES[j] !== TYPE_UNDEFINED) {
             //run through every rule up to and including this one
             for (var x = 0; x <= i; x++) {
               //run through the list of longhand properties that this shorthand property defines
@@ -3520,25 +3549,25 @@ export function CSSUtilities() {
               //because non-inheritable properties won't even be listed (obviously)
               for (var p = 0; p < LONGHAND_PROPERTIES[j].length; p++) {
                 var longhand = LONGHAND_PROPERTIES[j][p];
-                if (typeof rules[x].allproperties[longhand] != TYPE_UNDEFINED
-                  && rules[x].allproperties[longhand].status == STATUS_ACTIVE) {
+                if (typeof rules[x].allproperties[longhand] !== TYPE_UNDEFINED
+                  && rules[x].allproperties[longhand].status === STATUS_ACTIVE) {
                   //if we're examining this rule, only cancel out longhand properties
                   //that are defined earlier in the rule than the shorthand property we're inspecting
                   //so to make that disctinction we need to work out the index of
                   //the shorthand and longhand properties in question, if it's this rule
                   //nb. this presumes that for..in iterates in order of the property being added
                   //which is a correct presumption in all supported browsers
-                  if (x == i) {
+                  if (x === i) {
                     var n = 0;
                     for (var q in rules[x].allproperties) {
                       if (!rules[x].allproperties.hasOwnProperty(q)) {
                         continue;
                       }
 
-                      if (q == j) {
+                      if (q === j) {
                         var jindex = n;
                       }
-                      if (q == longhand) {
+                      if (q === longhand) {
                         var pindex = n;
                       }
 
@@ -3578,7 +3607,7 @@ export function CSSUtilities() {
         //so that they get converted by the compression routine
         //otherwise we'll end up with a condition that
         //no longer matches the post-compression property names
-        if ((j == 'properties' || j == 'allproperties') && howmany(rules[i][j]) == 0) {
+        if ((j === 'properties' || j === 'allproperties') && howmany(rules[i][j]) === 0) {
           rules[i][j] = NULL_VALUE;
         }
       }
@@ -3730,10 +3759,10 @@ export function CSSUtilities() {
       for (var a = 0; a < attrselectors.length; a++) {
         //we only want the data in $2, but we don't have that much
         //control over match(), so we'll have to edit them manually
-        if (attrselectors[a].charAt(0) != '[') {
+        if (attrselectors[a].charAt(0) !== '[') {
           attrselectors[a] = attrselectors[a].substr(1, attrselectors[a].length - 1);
         }
-        if (attrselectors[a].charAt(attrselectors[a].length - 1) != ']') {
+        if (attrselectors[a].charAt(attrselectors[a].length - 1) !== ']') {
           attrselectors[a] = attrselectors[a].substr(0, attrselectors[a].length - 1);
         }
         //then convert the selector into a token
@@ -3792,7 +3821,7 @@ export function CSSUtilities() {
       //probably it was inside generated content
       //and hence the value we're splitting doesn't contain a colon at all
       //so if that happens we'll just have to remove it and continue
-      if (matches.length == 1) {
+      if (matches.length === 1) {
         styletext.splice(j, 1);
         j--;
         continue;
@@ -3818,7 +3847,7 @@ export function CSSUtilities() {
     var selectors = [];
 
     //if the selectorstring is empty just return the empty array
-    if (selectorstring == '') {
+    if (selectorstring === '') {
       return selectors;
     }
 
@@ -3838,7 +3867,7 @@ export function CSSUtilities() {
   //to create object members in property/value pairs
   function parsePropertyText(styletext, properties, inherited) {
     //if the css text is empty return the object unchanged
-    if (styletext == '') {
+    if (styletext === '') {
       return properties;
     }
 
@@ -3853,7 +3882,7 @@ export function CSSUtilities() {
     for (var i = 0; i < styletext.length; i++) {
       //trim this value and continue if it's empty
       styletext[i] = trim(styletext[i]);
-      if (styletext[i] == '') {
+      if (styletext[i] === '') {
         continue;
       }
 
@@ -3872,7 +3901,7 @@ export function CSSUtilities() {
       //probably it was inside generated content
       //and hence the value we're splitting doesn't contain a colon at all
       //so if that happens we'll just have to ignore it and continue
-      if (matches.length == 1) {
+      if (matches.length === 1) {
         continue;
       }
 
@@ -3880,15 +3909,15 @@ export function CSSUtilities() {
       var key = trim(matches[0]);
 
       //if the rule is not inherited, or the property is inheritable
-      if (!inherited || (inherited && typeof INHERITED_PROPS[key] != TYPE_UNDEFINED)) {
+      if (!inherited || (inherited && typeof INHERITED_PROPS[key] !== TYPE_UNDEFINED)) {
         //don't overwrite an existing rule if it has !important
         //unless it was an inherited rule, or
         //unless this rule also has !important
         //(we need to check for an end-substring so that we don't get confused
         //	by a content property with "!important" in its text)
-        if (typeof properties[key] == TYPE_UNDEFINED
+        if (typeof properties[key] === TYPE_UNDEFINED
           || !IMPORTANT_RULE.test(properties[key].property)
-          || properties[key].inherited == BOOLEAN_TRUE
+          || properties[key].inherited === BOOLEAN_TRUE
           || IMPORTANT_RULE.test(matches[1])) {
           //save this value to the properties array
           //along with an inherited flag
@@ -3929,7 +3958,7 @@ export function CSSUtilities() {
 
     //if the contextTypes object contains "all" then any inner types are okay
     //so just rejoin the types string to its saved media query and return it unmodified
-    if (typeof contextTypes['all'] != TYPE_UNDEFINED) {
+    if (typeof contextTypes['all'] !== TYPE_UNDEFINED) {
       return types + typesQuery;
     }
 
@@ -3946,13 +3975,13 @@ export function CSSUtilities() {
       //then all the context media types apply here
       //so add them all individually to the types array
       //making sure we avoid duplication and not including media queries
-      if (types[i] == MEDIA_ALL) {
+      if (types[i] === MEDIA_ALL) {
         for (var m in contextTypes) {
           if (!contextTypes.hasOwnProperty(m)) {
             continue;
           }
 
-          if (arrayContains(types, m) == NULL_VALUE && !/[\(\)]/.test(m)) {
+          if (arrayContains(types, m) === NULL_VALUE && !/[\(\)]/.test(m)) {
             types.push(m);
           }
         }
@@ -3961,7 +3990,7 @@ export function CSSUtilities() {
       //then if the context does not contain this media type
       //then this media type either doesn't apply in context (so delete it from the array)
       //or it's "all" in which case we've already added the individual context types (so do nothing)
-      if (typeof contextTypes[types[i]] == TYPE_UNDEFINED) {
+      if (typeof contextTypes[types[i]] === TYPE_UNDEFINED) {
         types.splice(i, 1);
         i--;
       }
@@ -3971,7 +4000,7 @@ export function CSSUtilities() {
     //the context has precluded the test type entirely
     //so if that's the case add the value "none" to the array
     //so that it ends up getting returned as "none [+ media query]"
-    if (types.length == 0) {
+    if (types.length === 0) {
       types.push(MEDIA_NONE);
     }
 
@@ -3981,7 +4010,7 @@ export function CSSUtilities() {
   }
 
   //compare a media types array argument with the media types of a css rules
-  //to return true of false by whther the rule matches the argument criteria
+  //to return true of false by whether the rule matches the argument criteria
   function mediaMatches(media, rule) {
     //get the rule's media property and convert it to an object
     //so that we can easily test it as typeof mediaTypes[media]
@@ -3998,9 +4027,9 @@ export function CSSUtilities() {
       //or the rule's media contains "all" and the specified media isn't "none"
       //(this allows us to get collections of rules that don't apply to any media,
       // as well as the collections that apply to one or more)
-      if (typeof mediaTypes[media[j]] != TYPE_UNDEFINED
-        || (typeof mediaTypes[MEDIA_NONE] == TYPE_UNDEFINED && media[j] == MEDIA_ALL)
-        || (typeof mediaTypes[MEDIA_ALL] != TYPE_UNDEFINED) && media[j] != MEDIA_NONE) {
+      if (typeof mediaTypes[media[j]] !== TYPE_UNDEFINED
+        || (typeof mediaTypes[MEDIA_NONE] === TYPE_UNDEFINED && media[j] === MEDIA_ALL)
+        || (typeof mediaTypes[MEDIA_ALL] !== TYPE_UNDEFINED) && media[j] !== MEDIA_NONE) {
         matches = BOOLEAN_TRUE;
         break;
       }
@@ -4019,7 +4048,7 @@ export function CSSUtilities() {
     var mediaTypes = MEDIA_TYPES_LIST.split(',');
 
     mediaTypes.every(mediaType => {
-      if (window.matchMedia(mediaType).matches) {
+      if (WINDOW.matchMedia(mediaType).matches) {
         viewmedia = mediaType;
 
         return false;
@@ -4053,18 +4082,18 @@ export function CSSUtilities() {
       //for author mode we use the stylenode.styleSheet/sheet references
       //(or just the stylenode for safari);
       //or for browser mode we use the stylesheet references directly
-      var stylesheet = mode == MODE_AUTHOR
-        ? (THIS._stylesheets[i].stylenode == BOOLEAN_FALSE || THIS._stylesheets[i].stylenode == NULL_VALUE)
+      var stylesheet = mode === MODE_AUTHOR
+        ? (THIS._stylesheets[i].stylenode === BOOLEAN_FALSE || THIS._stylesheets[i].stylenode === NULL_VALUE)
           ? NULL_VALUE
           : (SAFARI || KONQUEROR || WEBKIT)
             ? THIS._stylesheets[i].stylenode
             //nb. although we know this condition is IE vs. others, an object test is better
-            : THIS._stylesheets[i].stylenode[typeof THIS._stylesheets[i].stylenode.styleSheet != TYPE_UNDEFINED ? 'styleSheet' : 'sheet']
+            : THIS._stylesheets[i].stylenode[typeof THIS._stylesheets[i].stylenode.styleSheet !== TYPE_UNDEFINED ? 'styleSheet' : 'sheet']
         : THIS._stylesheets[i].stylesheet;
 
       //ignore null stylesheets, such as duplicates,
       //or those we couldn't read for security reasons
-      if (stylesheet == NULL_VALUE) {
+      if (stylesheet === NULL_VALUE) {
         continue;
       }
 
@@ -4088,12 +4117,12 @@ export function CSSUtilities() {
     //but that would mean code forking for safari and konqueror, which is arguably a waste of code
     //since this method works for both; the only real difference is that the subtree modified
     //technique would be faster (virtually instant), but again, it's not really worth it for the extra code
-    if ((SAFARI || KONQUEROR || WEBKIT) && mode == MODE_BROWSER) {
+    if ((SAFARI || KONQUEROR || WEBKIT) && mode === MODE_BROWSER) {
       //function that iterates through the stylesheets collection
       //and assign an ident to any owner node that doesn't already have one
       function createStyleSheetIdents() {
-        for (var idents = [], dsheets = page.styleSheets, i = 0; i < dsheets.length; i++) {
-          if (typeof dsheets[i].ownerNode.__ident == TYPE_UNDEFINED) {
+        for (var idents = [], dsheets = DOCUMENT.styleSheets, i = 0; i < dsheets.length; i++) {
+          if (typeof dsheets[i].ownerNode.__ident === TYPE_UNDEFINED) {
             dsheets[i].ownerNode.__ident = new Date().getTime() + '' + Math.round(Math.random() * 10000);
           }
           idents.push(dsheets[i].ownerNode.__ident);
@@ -4103,15 +4132,15 @@ export function CSSUtilities() {
 
       //assign the initial control idents then start the watch timer
       var controlidents = createStyleSheetIdents(),
-        watcher = window.setInterval(function () {
+        watcher = WINDOW.setInterval(function () {
           //assign new idents as applicable
           var currentidents = createStyleSheetIdents();
 
           //if either of the ident arrays has changed
-          if (controlidents.join() != currentidents.join()) {
+          if (controlidents.join() !== currentidents.join()) {
             //clear the timer then re-initialize, calling any stored init callback
-            window.clearInterval(watcher);
-            THIS.init(typeof THIS.initcallback != TYPE_UNDEFINED ? THIS.initcallback : NULL_VALUE);
+            WINDOW.clearInterval(watcher);
+            THIS.init(typeof THIS.initcallback !== TYPE_UNDEFINED ? THIS.initcallback : NULL_VALUE);
           }
 
         }, WATCHER_SPEED_TIMER);
@@ -4129,14 +4158,14 @@ export function CSSUtilities() {
       //so all of that is unuseable, and a timer it has to be :-(
       //I did consider adding it as well, just so that we get faster responses
       //but what's the point? it's just a whole bunch more code to little real benefit
-      var watcher = window.setInterval(function () {
+      var watcher = WINDOW.setInterval(function () {
         //iterate through the optimized stylesheets set
         for (var i = 0; i < livesheets.length; i++) {
           //if the current disabled state differs from the stored state
-          if (livesheets[i].stylesheet.disabled != livesheets[i].disabled) {
+          if (livesheets[i].stylesheet.disabled !== livesheets[i].disabled) {
             //clear the timer then re-initialize, calling any stored init callback
-            window.clearInterval(watcher);
-            THIS.init(typeof THIS.initcallback != TYPE_UNDEFINED ? THIS.initcallback : NULL_VALUE);
+            WINDOW.clearInterval(watcher);
+            THIS.init(typeof THIS.initcallback !== TYPE_UNDEFINED ? THIS.initcallback : NULL_VALUE);
 
             //set a flag to break the iteration
             var dobreak = BOOLEAN_TRUE;
@@ -4146,7 +4175,7 @@ export function CSSUtilities() {
           //from firing multiple re-initializations
           //it's basically doing the same job as the buffer
           //used for other browsers, but in a different way
-          if (typeof dobreak != TYPE_UNDEFINED) {
+          if (typeof dobreak !== TYPE_UNDEFINED) {
             break;
           }
         }
@@ -4157,6 +4186,21 @@ export function CSSUtilities() {
 
 
   //-- private general utility methods --//
+
+  function santizeSelector(selector) {
+    if (REGEX_SINGLE_PSEUDO_ELEMENT.test(selector)) {
+      var selectors = selector.split(',');
+      for (var i = 0; i < selectors.length; i++) {
+        if (REGEX_SINGLE_PSEUDO_ELEMENT.test(selectors[i])) {
+          selectors.splice(i, 1);
+          i--;
+        }
+      }
+      selector = selectors.join(',');
+    }
+
+    return selector;
+  }
 
   //wrapper for Selectors APIs
   function getElementsBySelector(selector) {
@@ -4175,7 +4219,7 @@ export function CSSUtilities() {
     }
 
     //if the selector is now empty return zero matches
-    if (trim(selector) == '') {
+    if (trim(selector) === '') {
       return [];
     }
 
@@ -4189,9 +4233,9 @@ export function CSSUtilities() {
     //that the browser has native support for querySelectorAll
     //and it hasn't been set to true to specify that the
     //fallback library function should be used for everyone
-    if (api == BOOLEAN_FALSE) {
+    if (api === BOOLEAN_FALSE) {
       try {
-        return page.querySelectorAll(selector);
+        return DOCUMENT.querySelectorAll(selector);
       } catch (err) {
         return [];
       }
@@ -4199,9 +4243,9 @@ export function CSSUtilities() {
 
     //otherwise, if we have a qsa function
     //defined [and pre-tested], then call and return that
-    if (typeof qsa == TYPE_FUNCTION) {
+    if (typeof qsa === TYPE_FUNCTION) {
       try {
-        return qsa(selector, page);
+        return qsa(selector, DOCUMENT);
       } catch (err) {
         return [];
       }
@@ -4210,7 +4254,7 @@ export function CSSUtilities() {
     //otherwise use the fallback library function
     try {
       //if the library isn't there at all, throw the missing sapi error
-      if (typeof Selector != TYPE_FUNCTION) {
+      if (typeof Selector !== TYPE_FUNCTION) {
         throw(new Error(FATAL_ERROR_MISSING_SAPI));
       }
 
@@ -4223,12 +4267,12 @@ export function CSSUtilities() {
       //oddly enough though, this doesn't seem to prevent it from matching
       //the selectors it returns undefined for correctly against their element
       //so it must be a different test that causes it, not the one that matches it!?
-      var r = Selector(selector, page);
-      return typeof r == TYPE_UNDEFINED ? [] : r;
+      var r = Selector(selector, DOCUMENT);
+      return typeof r === TYPE_UNDEFINED ? [] : r;
     } catch (err) {
       //if the error is the missing sapi error we threw for the missing library
       //then allow it to be output to the console
-      if (err.message == FATAL_ERROR_MISSING_SAPI) {
+      if (err.message === FATAL_ERROR_MISSING_SAPI) {
         throw(err);
       }
 
@@ -4251,8 +4295,8 @@ export function CSSUtilities() {
     try {
       var thesenodes = arrayifize(
         THIS._isXML
-          ? page.getElementsByTagNameNS('*', tagname)
-          : page.getElementsByTagName(tagname)
+          ? DOCUMENT.getElementsByTagNameNS('*', tagname)
+          : DOCUMENT.getElementsByTagName(tagname)
       );
     }
       //just in case anything goes wrong, create an empty array
@@ -4277,9 +4321,9 @@ export function CSSUtilities() {
     //I mean ffs, I only noticed by accident; it's too late in the day to think about custom elements
     //except to the extent that I have done here, but that's only to ensure that the array indices
     //in the styleattrs array remain accurate with regard to matching indices in the "*" collection
-    if (tagname == '*') {
+    if (tagname === '*') {
       for (var i = 0; i < thesenodes.length; i++) {
-        if (thesenodes[i].nodeType != 1 || thesenodes[i].tagName.charAt(0) == '/') {
+        if (thesenodes[i].nodeType !== 1 || thesenodes[i].tagName.charAt(0) === '/') {
           thesenodes.splice(i--, 1);
         }
       }
@@ -4293,7 +4337,7 @@ export function CSSUtilities() {
   //if a public method is called without it having been pre-initialized
   function lateinit() {
     //if the script hasn't been initialized, do it now
-    if (typeof THIS._cssRules == TYPE_UNDEFINED) {
+    if (typeof THIS._cssRules === TYPE_UNDEFINED) {
       THIS.init();
     }
   }
@@ -4317,7 +4361,7 @@ export function CSSUtilities() {
       //which is ultimately for consistency and therefore easier comprehension
       //nb. should we ever require any of the public methods to take a function argument
       //other than the callback, we will need to redesign this code to accomodate
-      if (typeof argsary[i] == TYPE_FUNCTION) {
+      if (typeof argsary[i] === TYPE_FUNCTION) {
         for (var j = i; j < keys.length; j++) {
           args[keys[j]] = NULL_VALUE;
         }
@@ -4331,7 +4375,7 @@ export function CSSUtilities() {
         //all the other arg processing methods will then identify null
         //the same as undefined, and so put the appropriate default value in its place
       //(or throw an exception over it, if that's the appropriate response)
-      else if (typeof argsary[i] == TYPE_UNDEFINED) {
+      else if (typeof argsary[i] === TYPE_UNDEFINED) {
         args[keys[i]] = NULL_VALUE;
       }
         //if the argument is defined then add it
@@ -4355,13 +4399,13 @@ export function CSSUtilities() {
     //for accepting other kinds of reference string,
     //and partly for consistency with CSS reference syntax,
     //but mostly just because I think it looks cooler :-D
-    if (typeof argelement == TYPE_STRING && argelement.charAt(0) == '#') {
-      argelement = page.getElementById(argelement.substr(1, argelement.length - 1));
+    if (typeof argelement === TYPE_STRING && argelement.charAt(0) === '#') {
+      argelement = DOCUMENT.getElementById(argelement.substr(1, argelement.length - 1));
     }
 
     //if element is undefined, null, or not an element, throw an error
-    if (typeof argelement == TYPE_UNDEFINED || argelement == NULL_VALUE
-      || typeof argelement.nodeType == TYPE_UNDEFINED || argelement.nodeType != 1) {
+    if (typeof argelement === TYPE_UNDEFINED || argelement === NULL_VALUE
+      || typeof argelement.nodeType === TYPE_UNDEFINED || argelement.nodeType !== 1) {
       throw(new Error(errorMessageNoElement.replace('%method', calledby)));
     }
 
@@ -4372,7 +4416,7 @@ export function CSSUtilities() {
   //process a method's media argument
   function processMediaArgument(argmedia) {
     //if media is undefined, empty or null, default to "screen"
-    if (typeof argmedia == TYPE_UNDEFINED || argmedia == '' || argmedia == NULL_VALUE) {
+    if (typeof argmedia === TYPE_UNDEFINED || argmedia === '' || argmedia === NULL_VALUE) {
       argmedia = MEDIA_SCREEN;
     }
 
@@ -4389,7 +4433,7 @@ export function CSSUtilities() {
       argmedia[i] = trim(argmedia[i]);
 
       //if the value is "current" then set it to the current view media
-      if (argmedia[i] == MEDIA_CURRENT) {
+      if (argmedia[i] === MEDIA_CURRENT) {
         argmedia[i] = THIS._viewmedia;
       }
     }
@@ -4402,8 +4446,8 @@ export function CSSUtilities() {
   function processAcceptArgument(argaccept) {
     //if accept is undefined, empty, null or "null"
     //default to "*" which means "everything"
-    if (typeof argaccept == TYPE_UNDEFINED
-      || argaccept == '' || argaccept == NULL_VALUE || argaccept == 'null') {
+    if (typeof argaccept === TYPE_UNDEFINED
+      || argaccept === '' || argaccept === NULL_VALUE || argaccept === 'null') {
       argaccept = '*';
     }
 
@@ -4414,7 +4458,7 @@ export function CSSUtilities() {
       //because this can get called by recursive instances of getCSSRules
       //but we only actually need to process the argument
     //on the first instance before it's already been processed
-    else if (typeof argaccept == TYPE_STRING) {
+    else if (typeof argaccept === TYPE_STRING) {
       //trim the value
       argaccept = trim(argaccept);
 
@@ -4442,7 +4486,7 @@ export function CSSUtilities() {
   //process a method's onfinished callback argument
   function processOnfinishedArgument(argonfinished) {
     //if onfinished is [undefined or null or] not a function, set it to null
-    if (typeof argonfinished != TYPE_FUNCTION) {
+    if (typeof argonfinished !== TYPE_FUNCTION) {
       argonfinished = NULL_VALUE;
     }
 
@@ -4464,11 +4508,11 @@ export function CSSUtilities() {
   //if there's no match it returns null
   function arrayContains(ary, member, key) {
     for (var i = 0; i < ary.length; i++) {
-      if (typeof key != TYPE_UNDEFINED && typeof ary[i] == TYPE_OBJECT) {
-        if (ary[i][key] == member) {
+      if (typeof key !== TYPE_UNDEFINED && typeof ary[i] === TYPE_OBJECT) {
+        if (ary[i][key] === member) {
           return ary[i];
         }
-      } else if (ary[i] == member) {
+      } else if (ary[i] === member) {
         return ary[i];
       }
     }
@@ -4540,7 +4584,7 @@ export function CSSUtilities() {
     // they can't load the stylesheet, because it has no known "href"!)
     //more generally, this will indirectly catch failure to retrieve a stylesheet's href
     //for any exceptional reason that hasn't been accounted for
-    if (typeof href == TYPE_UNDEFINED) {
+    if (typeof href === TYPE_UNDEFINED) {
       return '';
     }
 
@@ -4574,7 +4618,7 @@ export function CSSUtilities() {
 
       //or if the input href begins with a leading slash, then it's base relative
     //so just add the input href to the base URI
-    else if (href.substr(0, 1) == '/') {
+    else if (href.substr(0, 1) === '/') {
       uri += href;
     }
 
@@ -4599,7 +4643,7 @@ export function CSSUtilities() {
       //now rebuild the path
       var path = '';
       for (i = 0; i < parts.length; i++) {
-        if (parts[i] != '') {
+        if (parts[i] !== '') {
           path += '/' + parts[i];
         }
       }
@@ -4619,7 +4663,7 @@ export function CSSUtilities() {
       parts = loc.pathname.split('/');
       parts = parts.splice(0, parts.length - 1);
       for (var i = 0; i < parts.length; i++) {
-        if (parts[i] != '') {
+        if (parts[i] !== '') {
           path += '/' + parts[i];
         }
       }
@@ -4646,14 +4690,14 @@ export function CSSUtilities() {
     //(Native XHR in IE7/8 is blocked and throws "access is denied",
     // but ActiveX is permitted if the user allows it [default is to prompt])
     var requestobject = NULL_VALUE;
-    if (typeof window.ActiveXObject != TYPE_UNDEFINED) {
+    if (typeof WINDOW.ActiveXObject !== TYPE_UNDEFINED) {
       try {
         requestobject = new ActiveXObject('Microsoft.XMLHTTP');
       } catch (err) {
         requestobject = NULL_VALUE;
       }
     }
-    if (requestobject == NULL_VALUE && typeof window.XMLHttpRequest != TYPE_UNDEFINED) {
+    if (requestobject === NULL_VALUE && typeof WINDOW.XMLHttpRequest !== TYPE_UNDEFINED) {
       try {
         requestobject = new XMLHttpRequest();
       } catch (err) {
@@ -4663,7 +4707,7 @@ export function CSSUtilities() {
 
     //if we failed to initiate a request then we can't do anything else
     //so we'll have to throw a fatal error and stop
-    if (requestobject == NULL_VALUE) {
+    if (requestobject === NULL_VALUE) {
       throw(new Error(FATAL_ERROR_NO_XHR));
     }
 
@@ -4672,7 +4716,7 @@ export function CSSUtilities() {
     //but this approach has always proven the most reliable
     //we should give this a reasonably unique key
     //just in case the URI already has cgi parameters
-    //#uri += (uri.indexOf('?') == -1 ? '?' : '&') + 'cssutilstamp=' + new Date().getTime();
+    //#uri += (uri.indexOf('?') === -1 ? '?' : '&') + 'cssutilstamp=' + new Date().getTime();
 
     //open the request using the specified async flag
     requestobject.open('GET', uri, async);
@@ -4711,11 +4755,11 @@ export function CSSUtilities() {
     }
 
     //if the async flag is true we're making an asynchronous request
-    if (async == BOOLEAN_TRUE) {
+    if (async === BOOLEAN_TRUE) {
       //create a readystatechange handler
       requestobject.onreadystatechange = function () {
         //when the request completes
-        if (requestobject.readyState == 4) {
+        if (requestobject.readyState === 4) {
           //***DEV SEMI-RANDOMIZED LATENCY
           //setTimeout(function() {
 

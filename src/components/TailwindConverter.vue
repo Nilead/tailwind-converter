@@ -131,7 +131,7 @@ import {Opacity} from '@/parsers/Opacity';
 const defaultConfig = require('tailwindcss/stubs/defaultConfig.stub');
 const resolveConfigObjects = require('tailwindcss/lib/util/resolveConfig').default;
 const tailwindSettings = resolveConfigObjects([defaultConfig]);
-console.log(defaultConfig, tailwindSettings);
+
 const deepmerge = require('deepmerge');
 const cloneDeep = require('clone-deep');
 
@@ -160,7 +160,7 @@ export default {
       return '<div id="converter-wrapper">' + this.originalHtml + '</div><style type="text/css">' + this.originalCss + '</style>';
     },
     tailwindPreview() {
-      return this.tailwindHtml;
+      return this.tailwindHtml + '<link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet" />';
     }
   },
   data: function () {
@@ -194,36 +194,34 @@ export default {
     },
     convert() {
       let sizes = {
-        // '640px': 'sm',
-        // '768px': 'md',
-        // '1024px': 'lg',
-        // '1280px': 'xl',
-        // '1440px': 'xxl',
+        '640px': 'sm',
+        '768px': 'md',
+        '1024px': 'lg',
+        '1280px': 'xl',
+        '1440px': 'xxl',
         '1920px': 'responsive'
       };
 
       // first duplicate the tree
       let wrapper = this.$refs.originalPreview.contentWindow.document.querySelector('#converter-wrapper');
       let newWrapper = wrapper.cloneNode(true);
-      
-      // lets loop through the sizes
-      for (let size in sizes) {
-        this.originalPreviewWidth = size;
 
-        setTimeout(() => {
+      setTimeout(() => {
+        CSSUtilities.define("window", this.$refs.originalPreview.contentWindow);
+        CSSUtilities.define("page", this.$refs.originalPreview.contentDocument);
+        CSSUtilities.define("watch", true);
+        // initialize
+        CSSUtilities.init();
+
+        // lets loop through the sizes
+        for (let size in sizes) {
+          this.originalPreviewWidth = size;
           let remPx = parseFloat(getComputedStyle(this.$refs.originalPreview.contentDocument.documentElement).fontSize);
-
-          CSSUtilities.define("page", this.$refs.originalPreview.contentDocument);
-          CSSUtilities.define("watch", false);
-
-          // initialize
-          CSSUtilities.init();
-
           this.parse(wrapper, newWrapper, sizes[size], remPx);
+        }
 
-          this.tailwindHtml = newWrapper.innerHTML;
-        }, 100);
-      }
+        this.tailwindHtml = newWrapper.innerHTML;
+      }, 100)
     },
 
     /**
@@ -235,14 +233,18 @@ export default {
      */
     parse(element, newElement, size, remPx) {
       if (element) {
+        // console.time('createContext');
         let context = new Context(element, this.tailwindSettings, remPx);
+        // console.timeEnd('createContext');
 
         let classes = [];
 
+        // console.time('parseContext');
         for (let k in parsers) {
           context.addParsedProp(k);
           parsers[k](context, classes);
         }
+        // console.timeEnd('parseContext');
 
         // lets process the classes
         if ('responsive' !== size) {

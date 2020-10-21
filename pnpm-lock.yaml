@@ -18,6 +18,7 @@ devDependencies:
   brace: 0.11.1
   eslint: 6.8.0
   eslint-plugin-vue: 6.2.2_eslint@6.8.0
+  mini-css-extract-plugin: 1.1.0
   tailwindcss: 1.9.5
   vue-cli-plugin-tailwind: 1.5.0
   vue-template-compiler: 2.6.12
@@ -8893,7 +8894,6 @@ packages:
     dev: true
     engines:
       node: '>=8.9.0'
-    optional: true
     resolution:
       integrity: sha512-rP4F0h2RaWSvPEkD7BLDFQnvSf+nK+wr3ESUjNTyAGobqrijmW92zc+SO6d4p4B1wh7+B/Jg1mkQe5NYUEHtHQ==
   /locate-path/3.0.0:
@@ -9365,6 +9365,18 @@ packages:
       webpack: ^4.4.0
     resolution:
       integrity: sha512-lp3GeY7ygcgAmVIcRPBVhIkf8Us7FZjA+ILpal44qLdSu11wmjKQ3d9k15lfD7pO4esu9eUIAW7qiYIBppv40A==
+  /mini-css-extract-plugin/1.1.0:
+    dependencies:
+      loader-utils: 2.0.0
+      schema-utils: 3.0.0
+      webpack-sources: 1.4.3
+    dev: true
+    engines:
+      node: '>= 10.13.0'
+    peerDependencies:
+      webpack: ^4.4.0 || ^5.0.0
+    resolution:
+      integrity: sha512-0bTS+Fg2tGe3dFAgfiN7+YRO37oyQM7/vjFvZF1nXSCJ/sy0tGpeme8MbT4BCpUuUphKwTh9LH/uuTcWRr9DPA==
   /minimalistic-assert/1.0.1:
     dev: true
     resolution:
@@ -11833,6 +11845,16 @@ packages:
       node: '>= 8.9.0'
     resolution:
       integrity: sha512-SHiNtMOUGWBQJwzISiVYKu82GiV4QYGePp3odlY1tuKO7gPtphAT5R/py0fA6xtbgLL/RvtJZnU9b8s0F1q0Xg==
+  /schema-utils/3.0.0:
+    dependencies:
+      '@types/json-schema': 7.0.6
+      ajv: 6.12.6
+      ajv-keywords: 3.5.2_ajv@6.12.6
+    dev: true
+    engines:
+      node: '>= 10.13.0'
+    resolution:
+      integrity: sha512-6D82/xSzO094ajanoOSbe4YvXWMfn2A//8Y1+MUqFAJul5Bs+yn36xbK9OtNDcRVSBJ9jjeoXftM6CfztsjOAA==
   /sec/1.0.0:
     dev: true
     engines:
@@ -14278,6 +14300,7 @@ specifiers:
   deepmerge: ^4.2.2
   eslint: ^6.8.0
   eslint-plugin-vue: ^6.2.2
+  mini-css-extract-plugin: ^1.1.0
   module: ^1.2.5
   net: ^1.0.2
   setimmediate: ^1.0.5
