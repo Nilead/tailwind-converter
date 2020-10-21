@@ -10,5 +10,11 @@ import { matchClasses } from "@/helpers/Dimension";
  */
 
 export function Width(context, classes) {
-    return matchClasses(context, classes, 'width');
+    matchClasses(context, classes, 'width', function (dimensionEntry) {
+        return 'w-' + dimensionEntry.className;
+    });
+
+    matchClasses(context, classes, 'max-width', function (dimensionEntry) {
+        return 'max-w-' + dimensionEntry.className;
+    });
 }
