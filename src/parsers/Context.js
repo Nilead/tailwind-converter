@@ -22,7 +22,7 @@ export class Context {
         this.element = element;
         this.computedStyles = getComputedStyle(element);
         this.remPx = remPx;
-        this.matchedRules = CSSUtilities.getCSSRules(element, 'screen', null, true); console.log(this.matchedRules);
+        this.matchedRules = CSSUtilities.getCSSRules(element, 'screen', null, true);
         this.tailwindSettings = tailwindSettings;
     }
 
