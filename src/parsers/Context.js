@@ -1,7 +1,5 @@
 import {CSSUtilities} from "@/helpers/CSSUtilities";
 
-const cloneDeep = require('clone-deep');
-
 export class Context {
   element = null;
 

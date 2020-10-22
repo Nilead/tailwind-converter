@@ -213,12 +213,40 @@ export default {
         // initialize
         CSSUtilities.init();
 
+        this.processing = new Map;
         // lets loop through the sizes
         for (let size in sizes) {
           this.originalPreviewWidth = size;
           let remPx = parseFloat(getComputedStyle(this.$refs.originalPreview.contentDocument.documentElement).fontSize);
           this.parse(wrapper, newWrapper, sizes[size], remPx);
         }
+
+        this.processing.forEach((sizes, el) => {
+          let classes = {};
+
+          ['xxl', 'xl', 'lg', 'md', 'sm', 'responsive'].forEach(size => {
+            if (sizes.hasOwnProperty(size)) {
+              sizes[size].classes.forEach(cl => {
+                classes[cl] = size;
+              })
+            }
+          })
+
+          let realClasses = [];
+          for (let k in classes) {
+            if (classes.hasOwnProperty(k)) {
+              if ('responsive' === classes[k]) {
+                realClasses.push(k);
+              } else {
+                realClasses.push(classes[k] + ':' + k);
+              }
+            }
+          }
+
+          el.classList.add(...realClasses);
+          console.log(el, realClasses);
+        });
+        this.processing = undefined;
 
         this.tailwindHtml = newWrapper.innerHTML;
       }, 100)
@@ -229,7 +257,7 @@ export default {
      * @param {HTMLElement|Node} element
      * @param {HTMLElement|Node} newElement
      * @param {String} size
-     * @param {String} size
+     * @param {Number} remPx
      */
     parse(element, newElement, size, remPx) {
       if (element) {
@@ -247,13 +275,26 @@ export default {
         // console.timeEnd('parseContext');
 
         // lets process the classes
-        if ('responsive' !== size) {
-          classes.forEach(function (val, key, classes) {
-            classes[key] = size + ':' + val;
-          })
+        // if ('responsive' !== size) {
+        //   classes.forEach(function (val, key, classes) {
+        //     classes[key] = size + ':' + val;
+        //   })
+        // }
+
+        let current = {};
+        if (this.processing.has(newElement)) {
+          current = this.processing.get(newElement);
         }
 
-        newElement.classList.add(...classes);
+        current[size] = {
+          classes: classes,
+          unmatched: context.getUnMatchedRules,
+          size: size
+        };
+
+        this.processing.set(newElement, current);
+
+        // newElement.classList.add(...classes);
 
         // remove inline style???
         newElement.removeAttribute('style');
