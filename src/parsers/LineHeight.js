@@ -1,5 +1,5 @@
-import { Context } from "@/parsers/Context";
-import { matchClasses } from "@/helpers/Dimension";
+import {Context} from "@/parsers/Context";
+import {matchClasses} from "@/helpers/Dimension";
 
 /**
  * Map the width css properties to classes
@@ -10,7 +10,7 @@ import { matchClasses } from "@/helpers/Dimension";
  */
 
 export function LineHeight(context, classes) {
-    matchClasses(context, classes, 'line-height', function (dimensionEntry) {
-        return 'leading-' + dimensionEntry.className;
-    });
+  matchClasses(context, classes, 'line-height', function (dimensionEntry) {
+    return 'leading-' + dimensionEntry.className;
+  });
 }

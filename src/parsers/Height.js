@@ -1,5 +1,5 @@
-import { Context } from "@/parsers/Context";
-import { matchClasses } from "@/helpers/Dimension";
+import {Context} from "@/parsers/Context";
+import {matchClasses} from "@/helpers/Dimension";
 
 /**
  * Map the height css properties to classes
@@ -10,7 +10,7 @@ import { matchClasses } from "@/helpers/Dimension";
  */
 
 export function Height(context, classes) {
-    matchClasses(context, classes, 'height', function (dimensionEntry) {
-        return 'h-' + dimensionEntry.className;
-    });
+  matchClasses(context, classes, 'height', function (dimensionEntry) {
+    return 'h-' + dimensionEntry.className;
+  });
 }

@@ -1,5 +1,5 @@
-import { Context } from "@/parsers/Context";
-import { matchClasses } from "@/helpers/Dimension";
+import {Context} from "@/parsers/Context";
+import {matchClasses} from "@/helpers/Dimension";
 
 /**
  * Map the width css properties to classes
@@ -10,7 +10,7 @@ import { matchClasses } from "@/helpers/Dimension";
  */
 
 export function FontSize(context, classes) {
-    matchClasses(context, classes, 'font-size', function (dimensionEntry) {
-        return 'text-' + dimensionEntry.className;
-    });
+  matchClasses(context, classes, 'font-size', function (dimensionEntry) {
+    return 'text-' + dimensionEntry.className;
+  });
 }

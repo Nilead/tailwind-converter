@@ -7,7 +7,7 @@ import {Context} from "@/parsers/Context";
  * @constructor
  */
 export function Grid(context, classes) {
-    if ('grid' === context.computedStyles.display) {
-        classes.push('grid');
-    }
+  if ('grid' === context.computedStyles.display) {
+    classes.push('grid');
+  }
 }

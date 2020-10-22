@@ -7,7 +7,7 @@ import {Context} from "@/parsers/Context";
  * @constructor
  */
 export function Flex(context, classes) {
-    if ('flex' === context.computedStyles.display) {
-        classes.push('flex');
-    }
+  if ('flex' === context.computedStyles.display) {
+    classes.push('flex');
+  }
 }
