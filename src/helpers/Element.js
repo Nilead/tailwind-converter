@@ -1,8 +1,8 @@
-function isString(arg) {
+export function isString(arg) {
   return 'string' === typeof arg;
 }
 
-function isNumeric(value) {
+export function isNumeric(value) {
   return !isNaN(parseFloat(value)) && isFinite(value);
 }
 
