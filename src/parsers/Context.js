@@ -26,6 +26,8 @@ export class Context {
     this.remPx = remPx;
     this.matchedRules = CSSUtilities.getCSSRules(element, 'screen', null, true);
     this.tailwindSettings = tailwindSettings;
+
+    this.parseMatchedRules();
   }
 
   addParsedProp(prop) {
@@ -73,5 +75,114 @@ export class Context {
     }
 
     this.matchesRules[ruleKey][propKey] = true;
+  }
+
+  parseMatchedRules() {
+    this.matchedRules.every((rule, index) => {
+      if (null === rule.properties || 'object' !== typeof rule.properties) {
+        return true;
+      }
+
+      return Object.entries(rule.properties).every(prop => {
+        if ('active' === prop[1]['status']) {
+          if ('border-width' === prop[0]) {
+            let tmp = prop[1]['value'].split(' ');
+
+            switch (tmp.length) {
+              case 1:
+                this.matchedRules[index].properties['border-top-width'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-right-width'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-width'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-left-width'] = {value: tmp[0], status: 'active'};
+                break;
+              case 2:
+                this.matchedRules[index].properties['border-top-width'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-right-width'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-width'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-left-width'] = {value: tmp[1], status: 'active'};
+                break;
+              case 3:
+                this.matchedRules[index].properties['border-top-width'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-right-width'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-width'] = {value: tmp[2], status: 'active'};
+                this.matchedRules[index].properties['border-left-width'] = {value: tmp[1], status: 'active'};
+                break;
+              case 4:
+                this.matchedRules[index].properties['border-top-width'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-right-width'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-width'] = {value: tmp[2], status: 'active'};
+                this.matchedRules[index].properties['border-left-width'] = {value: tmp[3], status: 'active'};
+                break;
+              default:
+                break;
+            }
+          } else if ('margin' === prop[0]) {
+            let tmp = prop[1]['value'].split(' ');
+
+            switch (tmp.length) {
+              case 1:
+                this.matchedRules[index].properties['margin-top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['margin-right'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['margin-bottom'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['margin-left'] = {value: tmp[0], status: 'active'};
+                break;
+              case 2:
+                this.matchedRules[index].properties['margin-top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['margin-right'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['margin-bottom'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['margin-left'] = {value: tmp[1], status: 'active'};
+                break;
+              case 3:
+                this.matchedRules[index].properties['margin-top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['margin-right'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['margin-bottom'] = {value: tmp[2], status: 'active'};
+                this.matchedRules[index].properties['margin-left'] = {value: tmp[1], status: 'active'};
+                break;
+              case 4:
+                this.matchedRules[index].properties['margin-top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['margin-right'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['margin-bottom'] = {value: tmp[2], status: 'active'};
+                this.matchedRules[index].properties['margin-left'] = {value: tmp[3], status: 'active'};
+                break;
+              default:
+                break;
+            }
+          } else if ('padding' === prop[0]) {
+            let tmp = prop[1]['value'].split(' ');
+
+            switch (tmp.length) {
+              case 1:
+                this.matchedRules[index].properties['padding-top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['padding-right'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['padding-bottom'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['padding-left'] = {value: tmp[0], status: 'active'};
+                break;
+              case 2:
+                this.matchedRules[index].properties['padding-top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['padding-right'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['padding-bottom'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['padding-left'] = {value: tmp[1], status: 'active'};
+                break;
+              case 3:
+                this.matchedRules[index].properties['padding-top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['padding-right'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['padding-bottom'] = {value: tmp[2], status: 'active'};
+                this.matchedRules[index].properties['padding-left'] = {value: tmp[1], status: 'active'};
+                break;
+              case 4:
+                this.matchedRules[index].properties['padding-top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['padding-right'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['padding-bottom'] = {value: tmp[2], status: 'active'};
+                this.matchedRules[index].properties['padding-left'] = {value: tmp[3], status: 'active'};
+                break;
+              default:
+                break;
+            }
+          }
+        }
+
+        return true;
+      });
+    });
   }
 }
