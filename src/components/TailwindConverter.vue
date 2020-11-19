@@ -122,6 +122,7 @@ import {LetterSpacing} from '@/parsers/LetterSpacing';
 import {LineHeight} from '@/parsers/LineHeight';
 import {Border} from '@/parsers/Border';
 import {Opacity} from '@/parsers/Opacity';
+import {Position} from '@/parsers/Position';
 
 // import 'setimmediate';
 // const CSSInliner = require('css-inliner');
@@ -147,7 +148,8 @@ let parsers = {
   letterSpacing: LetterSpacing,
   lineHeight: LineHeight,
   border: Border,
-  opacity: Opacity
+  opacity: Opacity,
+  position: Position
 };
 
 export default {
@@ -230,7 +232,7 @@ export default {
                 classes[cl] = size;
               })
             }
-          })
+          });
 
           let realClasses = [];
           for (let k in classes) {

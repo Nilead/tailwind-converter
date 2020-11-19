@@ -116,6 +116,37 @@ export class Context {
               default:
                 break;
             }
+          } else if ('inset' === prop[0]) {
+            let tmp = prop[1]['value'].split(' ');
+
+            switch (tmp.length) {
+              case 1:
+                this.matchedRules[index].properties['top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['right'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['bottom'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['left'] = {value: tmp[0], status: 'active'};
+                break;
+              case 2:
+                this.matchedRules[index].properties['top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['right'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['bottom'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['left'] = {value: tmp[1], status: 'active'};
+                break;
+              case 3:
+                this.matchedRules[index].properties['top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['right'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['bottom'] = {value: tmp[2], status: 'active'};
+                this.matchedRules[index].properties['left'] = {value: tmp[1], status: 'active'};
+                break;
+              case 4:
+                this.matchedRules[index].properties['top'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['right'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['bottom'] = {value: tmp[2], status: 'active'};
+                this.matchedRules[index].properties['left'] = {value: tmp[3], status: 'active'};
+                break;
+              default:
+                break;
+            }
           } else if ('margin' === prop[0]) {
             let tmp = prop[1]['value'].split(' ');
 
