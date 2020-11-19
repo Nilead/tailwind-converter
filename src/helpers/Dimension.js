@@ -41,24 +41,48 @@ export function matchClasses(context, classes, dimension, callback) {
   let rules = [];
   let dimensionEntries = [];
 
-  Object.entries(context.tailwindSettings.theme[tailwindDimension]).every(dimensionEntry => {
-    let dimensionMatch = dimensionEntry[1].match(/^([+-]?(?:\d+|\d*\.\d+))([a-z]*|%)$/);
-
-    if (dimensionMatch) {
-      let numericValue = parseFloat(dimensionMatch[1]);
-      let unit = dimensionMatch[2];
+  if (-1 !== ['top', 'bottom', 'left', 'right'].indexOf(tailwindDimension)) {
+    [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72, 80, 96].forEach(className => {
+      let value = className / 4;
 
       dimensionEntries.push({
-        className: dimensionEntry[0],
-        classValue: dimensionEntry[1],
-        value: dimensionMatch[1],
-        numericValue: numericValue,
-        unit: unit
+        className: '' + className,
+        classValue: value + 'rem',
+        value: '' + value,
+        numericValue: value,
+        unit: 'rem'
       });
-    }
 
-    return true;
-  });
+      if (value) {
+        dimensionEntries.push({
+          className: '-' + className,
+          classValue: '-' + value + 'rem',
+          value: '-' + value,
+          numericValue: -value,
+          unit: 'rem'
+        });
+      }
+    });
+  } else {
+    Object.entries(context.tailwindSettings.theme[tailwindDimension]).every(dimensionEntry => {
+      let dimensionMatch = dimensionEntry[1].match(/^([+-]?(?:\d+|\d*\.\d+))([a-z]*|%)$/);
+
+      if (dimensionMatch) {
+        let numericValue = parseFloat(dimensionMatch[1]);
+        let unit = dimensionMatch[2];
+
+        dimensionEntries.push({
+          className: dimensionEntry[0],
+          classValue: dimensionEntry[1],
+          value: dimensionMatch[1],
+          numericValue: numericValue,
+          unit: unit
+        });
+      }
+
+      return true;
+    });
+  }
 
   // we prioritize
   // lets attempt for exact match
@@ -137,19 +161,38 @@ export function matchClasses(context, classes, dimension, callback) {
   let bestMatch = null;
   minDistance = null;
 
-  dimensionEntries.forEach(dimensionEntry => {
+  // dimensionEntries.forEach(dimensionEntry => {
+  //   let pxValue = convertUnit(dimensionEntry.numericValue, dimensionEntry.unit, context, dimension);
+  //
+  //   if (null !== pxValue) {
+  //     let distance = Math.abs(pxValue - computedValue);
+  //     // we want to ensure that the distance is not greater than our defined threshold
+  //     // TODO: what if computedValue = 0?
+  //
+  //     if (0.05 >= (distance / computedValue) && (null === minDistance || minDistance > distance)) {
+  //       bestMatch = dimensionEntry;
+  //       minDistance = distance;
+  //     }
+  //   }
+  // });
+
+  dimensionEntries.every(dimensionEntry => {
     let pxValue = convertUnit(dimensionEntry.numericValue, dimensionEntry.unit, context, dimension);
 
     if (null !== pxValue) {
-      let distance = Math.abs(pxValue - computedValue);
-      // we want to ensure that the distance is not greater than our defined threshold
-      // TODO: what if computedValue = 0?
-
-      if (0.05 >= (distance / computedValue) && (null === minDistance || minDistance > distance)) {
+      if (pxValue >= computedValue && computedValue > 0) {
         bestMatch = dimensionEntry;
-        minDistance = distance;
+        return false;
+      } else if (pxValue <= computedValue && computedValue < 0) {
+        bestMatch = dimensionEntry;
+        return false;
+      } else if (pxValue === computedValue && computedValue === 0) {
+        bestMatch = dimensionEntry;
+        return false;
       }
     }
+
+    return true;
   });
 
   if (bestMatch) {
