@@ -85,7 +85,38 @@ export class Context {
 
       return Object.entries(rule.properties).every(prop => {
         if ('active' === prop[1]['status']) {
-          if ('border-width' === prop[0]) {
+          if ('border-radius' === prop[0]) {
+            let tmp = prop[1]['value'].split(' ');
+
+            switch (tmp.length) {
+              case 1:
+                this.matchedRules[index].properties['border-top-left-radius'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-top-right-radius'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-right-radius'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-left-radius'] = {value: tmp[0], status: 'active'};
+                break;
+              case 2:
+                this.matchedRules[index].properties['border-top-left-radius'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-top-right-radius'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-right-radius'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-left-radius'] = {value: tmp[1], status: 'active'};
+                break;
+              case 3:
+                this.matchedRules[index].properties['border-top-left-radius'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-top-right-radius'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-right-radius'] = {value: tmp[2], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-left-radius'] = {value: tmp[1], status: 'active'};
+                break;
+              case 4:
+                this.matchedRules[index].properties['border-top-left-radius'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['border-top-right-radius'] = {value: tmp[1], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-right-radius'] = {value: tmp[2], status: 'active'};
+                this.matchedRules[index].properties['border-bottom-left-radius'] = {value: tmp[3], status: 'active'};
+                break;
+              default:
+                break;
+            }
+          } else if ('border-width' === prop[0]) {
             let tmp = prop[1]['value'].split(' ');
 
             switch (tmp.length) {
