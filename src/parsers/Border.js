@@ -11,34 +11,66 @@ import {matchClasses} from "@/helpers/Dimension";
 
 export function Border(context, classes) {
   matchClasses(context, classes, 'border-top-left-radius', function (dimensionEntry) {
-    return 'rounded-tl-' + dimensionEntry.className;
+    if ('default' === dimensionEntry.className) {
+      return 'rounded-tl';
+    } else {
+      return 'rounded-tl-' + dimensionEntry.className;
+    }
   });
 
   matchClasses(context, classes, 'border-top-right-radius', function (dimensionEntry) {
-    return 'rounded-tr-' + dimensionEntry.className;
+    if ('default' === dimensionEntry.className) {
+      return 'rounded-tr';
+    } else {
+      return 'rounded-tr-' + dimensionEntry.className;
+    }
   });
 
   matchClasses(context, classes, 'border-bottom-right-radius', function (dimensionEntry) {
-    return 'rounded-br-' + dimensionEntry.className;
+    if ('default' === dimensionEntry.className) {
+      return 'rounded-br';
+    } else {
+      return 'rounded-br-' + dimensionEntry.className;
+    }
   });
 
   matchClasses(context, classes, 'border-bottom-left-radius', function (dimensionEntry) {
-    return 'rounded-bl-' + dimensionEntry.className;
+    if ('default' === dimensionEntry.className) {
+      return 'rounded-bl';
+    } else {
+      return 'rounded-bl-' + dimensionEntry.className;
+    }
   });
 
   matchClasses(context, classes, 'border-top-width', function (dimensionEntry) {
-    return 'border-t-' + dimensionEntry.className;
+    if ('default' === dimensionEntry.className) {
+      return 'border-t';
+    } else {
+      return 'border-t-' + dimensionEntry.className;
+    }
   });
 
   matchClasses(context, classes, 'border-right-width', function (dimensionEntry) {
-    return 'border-r-' + dimensionEntry.className;
+    if ('default' === dimensionEntry.className) {
+      return 'border-r';
+    } else {
+      return 'border-r-' + dimensionEntry.className;
+    }
   });
 
   matchClasses(context, classes, 'border-bottom-width', function (dimensionEntry) {
-    return 'border-b-' + dimensionEntry.className;
+    if ('default' === dimensionEntry.className) {
+      return 'border-b';
+    } else {
+      return 'border-b-' + dimensionEntry.className;
+    }
   });
 
   matchClasses(context, classes, 'border-left-width', function (dimensionEntry) {
-    return 'border-l-' + dimensionEntry.className;
+    if ('default' === dimensionEntry.className) {
+      return 'border-l';
+    } else {
+      return 'border-l-' + dimensionEntry.className;
+    }
   });
 }
