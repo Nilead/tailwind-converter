@@ -240,6 +240,21 @@ export class Context {
               default:
                 break;
             }
+          } else if ('place-content' === prop[0]) {
+            let tmp = prop[1]['value'].split(' ');
+
+            switch (tmp.length) {
+              case 1:
+                this.matchedRules[index].properties['align-content'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['justify-content'] = {value: tmp[0], status: 'active'};
+                break;
+              case 2:
+                this.matchedRules[index].properties['align-content'] = {value: tmp[0], status: 'active'};
+                this.matchedRules[index].properties['justify-content'] = {value: tmp[1], status: 'active'};
+                break;
+              default:
+                break;
+            }
           }
         }
 
